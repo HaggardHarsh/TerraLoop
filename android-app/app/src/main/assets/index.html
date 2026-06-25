@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TerraLoop — AI Waste Intelligence Platform</title>
+  <meta name="description" content="TerraLoop is an AI-driven sustainable waste logistics and upcycling platform. Scan waste, get personalized reuse suggestions, and track your environmental impact." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<canvas id="particle-canvas"></canvas>
+
+<div id="app">
+
+  <!-- ═══════════════════════════════════════════
+       ONBOARDING — 5 steps (pincode moved to last)
+  ═══════════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════════
+       SPLASH SCREEN — Animated intro (2 seconds)
+  ═══════════════════════════════════════════ -->
+  <section id="screen-splash" class="screen active">
+    <div class="splash-container">
+      <div class="splash-glow"></div>
+      <div class="splash-logo-wrap">
+        <svg width="80" height="80" viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="20" r="19" stroke="url(#slg1)" stroke-width="2"/>
+          <path d="M12 20 C12 14 20 10 28 14 L24 18 C20 16 16 18 16 20" stroke="url(#slg1)" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M28 20 C28 26 20 30 12 26 L16 22 C20 24 24 22 24 20" stroke="url(#slg2)" stroke-width="2.5" stroke-linecap="round"/>
+          <defs>
+            <linearGradient id="slg1" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#06b6d4"/>
+            </linearGradient>
+            <linearGradient id="slg2" x1="40" y1="0" x2="0" y2="40" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#06b6d4"/><stop offset="100%" stop-color="#10b981"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="splash-wordmark">TerraLoop</div>
+      <div class="splash-tagline">AI Waste Intelligence</div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       PERSONALIZE MODAL
+  ═══════════════════════════════════════════ -->
+  <div id="personalize-modal" class="modal-overlay hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+      <div class="modal-glow"></div>
+      <div class="modal-emoji">🎯</div>
+      <h2 class="modal-title">Let's <span class="grad-text">personalize</span> your experience</h2>
+      <p class="modal-desc">Answer a few quick questions so we can tailor every suggestion to your home, tools, and location.</p>
+      <button class="btn-primary modal-cta" id="modal-go-btn">Let's Go →</button>
+      <button class="btn-link" id="modal-skip-btn">Skip for now</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       ONBOARDING — Horizontal Swipe Questionnaire
+  ═══════════════════════════════════════════ -->
+  <section id="screen-onboarding" class="screen">
+    <div class="onboarding-wrap">
+      <div class="ob-top-bar">
+        <button class="swipe-prev hidden" id="swipe-prev">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          Back
+        </button>
+        <div class="logo-mark">
+          <svg width="24" height="24" viewBox="0 0 40 40" fill="none">
+            <circle cx="20" cy="20" r="19" stroke="url(#lg1)" stroke-width="2"/>
+            <path d="M12 20 C12 14 20 10 28 14 L24 18 C20 16 16 18 16 20" stroke="url(#lg1)" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M28 20 C28 26 20 30 12 26 L16 22 C20 24 24 22 24 20" stroke="url(#lg2)" stroke-width="2.5" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="lg1" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#06b6d4"/>
+              </linearGradient>
+              <linearGradient id="lg2" x1="40" y1="0" x2="0" y2="40" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#06b6d4"/><stop offset="100%" stop-color="#10b981"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <span class="logo-text">TerraLoop</span>
+        </div>
+        <div class="step-indicator">
+          <div class="step-progress-track"><div class="step-progress-fill" id="step-progress-fill" style="width: 25%"></div></div>
+          <span id="step-text">Step 1 of 4</span>
+        </div>
+      </div>
+
+      <!-- Swipe Carousel -->
+      <div class="swipe-container" id="swipe-container">
+
+        <!-- Slide 0: Living Space -->
+        <div class="swipe-slide" data-slide="0">
+          <div class="slide-content">
+            <div class="ob-header">
+              <h1 class="ob-title">Your <span class="grad-text-emerald">Living Space</span></h1>
+              <p class="ob-sub">Helps us filter suggestions to what actually fits your home.</p>
+            </div>
+            <div class="form-grid-no-bg">
+              <div class="form-group">
+                <div class="section-divider"><span>HOUSING TYPE</span></div>
+                <div class="chip-grid" id="sw-housing-chips">
+                  <button class="chip-card active" data-val="apartment">
+                    <div class="chip-check">✓</div>
+                    <div class="chip-icon">🏢</div>
+                    <div class="chip-title">Apartment</div>
+                    <div class="chip-desc">Multi-unit, shared walls</div>
+                  </button>
+                  <button class="chip-card" data-val="house">
+                    <div class="chip-check">✓</div>
+                    <div class="chip-icon">🏠</div>
+                    <div class="chip-title">House</div>
+                    <div class="chip-desc">Single-family home</div>
+                  </button>
+                  <button class="chip-card" data-val="condo">
+                    <div class="chip-check">✓</div>
+                    <div class="chip-icon">🏙️</div>
+                    <div class="chip-title">Condo</div>
+                    <div class="chip-desc">Individually owned unit</div>
+                  </button>
+                  <button class="chip-card" data-val="studio">
+                    <div class="chip-check">✓</div>
+                    <div class="chip-icon">🛏</div>
+                    <div class="chip-title">Studio</div>
+                    <div class="chip-desc">Single-room living</div>
+                  </button>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="section-divider"><span>GREEN SPACE AVAILABLE</span></div>
+                <div class="chip-grid" id="sw-greenspace-chips">
+                  <button class="chip-card active" data-val="none">
+                    <div class="chip-check">✓</div>
+                    <div class="chip-icon">🚫</div>
+                    <div class="chip-title">None</div>
+                    <div class="chip-desc">No private or shared outdoor area</div>
+                  </button>
+                  <button class="chip-card" data-val="balcony">
+                    <div class="chip-check">✓</div>
+                    <div class="chip-icon">🪴</div>
+                    <div class="chip-title">Balcony</div>
+                    <div class="chip-desc">Private balcony access</div>
+                  </button>
+                  <button class="chip-card" data-val="garden">
+                    <div class="chip-check">✓</div>
+                    <div class="chip-icon">🌿</div>
+                    <div class="chip-title">Garden</div>
+                    <div class="chip-desc">Personal garden area</div>
+                  </button>
+                  <button class="chip-card" data-val="rooftop">
+                    <div class="chip-check">✓</div>
+                    <div class="chip-icon">🏗</div>
+                    <div class="chip-title">Rooftop</div>
+                    <div class="chip-desc">Shared/Private rooftop</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="swipe-nav-bottom">
+              <button class="btn-primary btn-large swipe-next">NEXT STEP</button>
+              <button class="btn-link skip-link swipe-skip">Skip this for now</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 1: Waste Infrastructure -->
+        <div class="swipe-slide" data-slide="1">
+          <div class="slide-content">
+            <div class="ob-header">
+              <h1 class="ob-title">Waste <span class="grad-text-emerald">Infrastructure</span></h1>
+              <p class="ob-sub">Determines routing logic for every item you scan.</p>
+            </div>
+            <div class="form-grid-no-bg">
+              <div class="form-group">
+                <div class="section-divider"><span>BINS & COMPOSTING</span></div>
+                <div class="chip-grid">
+                  <div class="chip-card stepper-card">
+                    <div class="chip-title">Number of Bins</div>
+                    <div class="stepper-wrap large-stepper" style="margin-top: 8px;">
+                      <button class="stepper-btn" id="sw-bins-dec">−</button>
+                      <div class="stepper-val" id="sw-bins-val">2</div>
+                      <button class="stepper-btn" id="sw-bins-inc">+</button>
+                    </div>
+                  </div>
+                  <div class="chip-card active" id="sw-compost-yes" onclick="toggleCompost()">
+                    <div class="chip-check">✓</div>
+                    <div class="chip-icon">♻️</div>
+                    <div class="chip-title">Composting</div>
+                    <div class="chip-desc">I compost organic waste</div>
+                  </div>
+                  <div class="chip-card toggle-card" id="sw-compost-no" onclick="selectCompost(false)" style="display:none;">
+                    <div class="chip-check">✓</div>
+                    <div class="chip-icon">❌</div>
+                    <div class="chip-title">No Composting</div>
+                    <div class="chip-desc">Not available</div>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="section-divider"><span>MUNICIPAL PICKUP DAYS</span></div>
+                <p class="label-hint" style="text-align:center; margin-bottom:10px;">Select all that apply</p>
+                <div class="chip-grid multi" id="sw-pickup-chips">
+                  <button class="chip-card active" data-val="none">
+                    <div class="chip-check">✓</div>
+                    <div class="chip-icon">🚫</div>
+                    <div class="chip-title">No Pickup</div>
+                    <div class="chip-desc">No service</div>
+                  </button>
+                  <button class="chip-card" data-val="mon"><div class="chip-check">✓</div><div class="chip-title">Monday</div></button>
+                  <button class="chip-card" data-val="tue"><div class="chip-check">✓</div><div class="chip-title">Tuesday</div></button>
+                  <button class="chip-card" data-val="wed"><div class="chip-check">✓</div><div class="chip-title">Wednesday</div></button>
+                  <button class="chip-card" data-val="thu"><div class="chip-check">✓</div><div class="chip-title">Thursday</div></button>
+                  <button class="chip-card" data-val="fri"><div class="chip-check">✓</div><div class="chip-title">Friday</div></button>
+                  <button class="chip-card" data-val="sat"><div class="chip-check">✓</div><div class="chip-title">Saturday</div></button>
+                  <button class="chip-card" data-val="sun"><div class="chip-check">✓</div><div class="chip-title">Sunday</div></button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="swipe-nav-bottom">
+              <button class="btn-primary btn-large swipe-next">NEXT STEP</button>
+              <button class="btn-link skip-link swipe-skip">Skip this for now</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 2: Toolkit -->
+        <div class="swipe-slide" data-slide="2">
+          <div class="slide-content">
+            <div class="ob-header">
+              <h1 class="ob-title">Your <span class="grad-text-emerald">Toolkit</span></h1>
+              <p class="ob-sub">We'll only suggest projects you can actually make.</p>
+            </div>
+            <div class="form-grid-no-bg">
+              <div class="form-group">
+                <div class="section-divider"><span>AVAILABLE TOOLS</span></div>
+                <p class="label-hint" style="text-align:center; margin-bottom:10px;">Select all that apply</p>
+                <div class="chip-grid multi" id="sw-tools-chips">
+                  <button class="chip-card active" data-val="scissors"><div class="chip-check">✓</div><div class="chip-icon">✂️</div><div class="chip-title">Scissors</div></button>
+                  <button class="chip-card" data-val="glue_gun"><div class="chip-check">✓</div><div class="chip-icon">🔫</div><div class="chip-title">Glue Gun</div></button>
+                  <button class="chip-card active" data-val="hammer"><div class="chip-check">✓</div><div class="chip-icon">🔨</div><div class="chip-title">Hammer</div></button>
+                  <button class="chip-card" data-val="drill"><div class="chip-check">✓</div><div class="chip-icon">🔩</div><div class="chip-title">Drill</div></button>
+                  <button class="chip-card" data-val="saw"><div class="chip-check">✓</div><div class="chip-icon">🪚</div><div class="chip-title">Saw</div></button>
+                  <button class="chip-card" data-val="sewing"><div class="chip-check">✓</div><div class="chip-icon">🧵</div><div class="chip-title">Sewing Kit</div></button>
+                  <button class="chip-card active" data-val="paint"><div class="chip-check">✓</div><div class="chip-icon">🖌️</div><div class="chip-title">Paint</div></button>
+                  <button class="chip-card" data-val="soldering"><div class="chip-check">✓</div><div class="chip-icon">⚡</div><div class="chip-title">Soldering Iron</div></button>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="section-divider"><span>HOUSEHOLD TYPE</span></div>
+                <div class="chip-grid" id="sw-demo-chips">
+                  <button class="chip-card active" data-val="adult"><div class="chip-check">✓</div><div class="chip-icon">👤</div><div class="chip-title">Solo</div></button>
+                  <button class="chip-card" data-val="couple"><div class="chip-check">✓</div><div class="chip-icon">👫</div><div class="chip-title">Couple</div></button>
+                  <button class="chip-card" data-val="family"><div class="chip-check">✓</div><div class="chip-icon">👨‍👩‍👧</div><div class="chip-title">Family</div></button>
+                  <button class="chip-card" data-val="elderly"><div class="chip-check">✓</div><div class="chip-icon">🧓</div><div class="chip-title">Elderly</div></button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="swipe-nav-bottom">
+              <button class="btn-primary btn-large swipe-next">NEXT STEP</button>
+              <button class="btn-link skip-link swipe-skip">Skip this for now</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 3: Location (Last) -->
+        <div class="swipe-slide" data-slide="3">
+          <div class="slide-content">
+            <div class="location-prompt" id="location-prompt">
+              <div class="location-icon-glow">
+                <div class="loc-glow-ring"></div>
+                <div class="loc-glow-ring delay"></div>
+                <span class="loc-icon">📍</span>
+              </div>
+              <h1 class="ob-title">Enable <span class="grad-text-emerald">Location</span></h1>
+              <p class="ob-sub">We use your location only to find certified waste facilities near you. Your data stays on your device.</p>
+              <button class="btn-primary btn-large" id="btn-allow-location" style="margin-top: 10px;">📍 Allow Location Access</button>
+              <button class="btn-link" id="btn-manual-pincode">Enter pincode manually</button>
+              <div class="pincode-manual hidden" id="pincode-manual">
+                <div class="input-wrap">
+                  <span class="input-icon">📍</span>
+                  <input type="text" id="sw-pincode-input" placeholder="e.g. 110001" maxlength="10" />
+                </div>
+                <button class="btn-primary btn-large" id="btn-confirm-pincode" style="margin-top:12px;width:100%;">Confirm Pincode →</button>
+                <button class="btn-link" id="btn-cancel-pincode" style="margin-top:12px;width:100%;">Use device location instead</button>
+              </div>
+              <div class="privacy-badge">🔒 Never stored. Never shared.</div>
+            </div>
+
+            <div class="profile-ready hidden" id="profile-ready">
+              <div class="success-anim">
+                <div class="success-ring"></div>
+                <div class="success-check">✓</div>
+              </div>
+              <h1 class="ob-title"><span class="grad-text-emerald">All Set!</span></h1>
+              <p class="ob-sub">Your personalized waste intelligence profile is ready.</p>
+              <div class="profile-summary" id="new-profile-summary"></div>
+              <button class="btn-primary btn-large" onclick="launchApp()">Launch TerraLoop 🚀</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Progress — 5 steps -->
+      <div class="onboarding-progress">
+        <div class="prog-step active" id="prog-0"><div class="prog-dot"></div><span>Home</span></div>
+        <div class="prog-line"></div>
+        <div class="prog-step" id="prog-1"><div class="prog-dot"></div><span>Waste</span></div>
+        <div class="prog-line"></div>
+        <div class="prog-step" id="prog-2"><div class="prog-dot"></div><span>Skills</span></div>
+        <div class="prog-line"></div>
+        <div class="prog-step" id="prog-3"><div class="prog-dot"></div><span>Location</span></div>
+        <div class="prog-line"></div>
+        <div class="prog-step" id="prog-4"><div class="prog-dot"></div><span>Done</span></div>
+      </div>
+
+      <!-- Step 0: Housing & Green Space (NO pincode here) -->
+      <div class="ob-step active" id="ob-step-0">
+        <h1 class="ob-title">Your <span class="grad-text">Living Space</span></h1>
+        <p class="ob-sub">Helps us filter suggestions to what actually fits your home.</p>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Housing Type</label>
+            <div class="chip-group" id="housing-chips">
+              <button class="chip active" data-val="apartment">🏢 Apartment</button>
+              <button class="chip" data-val="house">🏠 House</button>
+              <button class="chip" data-val="condo">🏙️ Condo</button>
+              <button class="chip" data-val="studio">🛏 Studio</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Green Space Available</label>
+            <div class="chip-group" id="greenspace-chips">
+              <button class="chip active" data-val="none">🚫 None</button>
+              <button class="chip" data-val="balcony">🪴 Balcony</button>
+              <button class="chip" data-val="garden">🌿 Garden</button>
+              <button class="chip" data-val="rooftop">🏗 Rooftop</button>
+            </div>
+          </div>
+        </div>
+        <button class="btn-primary" id="ob-next-0">Continue →</button>
+      </div>
+
+      <!-- Step 1: Waste Infrastructure (with "No pickup" option) -->
+      <div class="ob-step" id="ob-step-1">
+        <h1 class="ob-title">Waste <span class="grad-text">Infrastructure</span></h1>
+        <p class="ob-sub">Determines routing logic for every item you scan.</p>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>How many bins do you have?</label>
+            <div class="stepper-wrap">
+              <button class="stepper-btn" id="bins-dec">−</button>
+              <div class="stepper-val" id="bins-val">2</div>
+              <button class="stepper-btn" id="bins-inc">+</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Composting available?</label>
+            <div class="toggle-row">
+              <div class="toggle-card active" id="compost-yes" onclick="selectCompost(true)">
+                <span class="t-icon">♻️</span><span>Yes, I compost</span>
+              </div>
+              <div class="toggle-card" id="compost-no" onclick="selectCompost(false)">
+                <span class="t-icon">❌</span><span>No composting</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Municipal Pickup Days <span class="label-hint">(select all that apply)</span></label>
+            <div class="chip-group multi" id="pickup-chips">
+              <button class="chip active" data-val="none">🚫 No pickup service</button>
+              <button class="chip" data-val="mon">Mon</button>
+              <button class="chip" data-val="tue">Tue</button>
+              <button class="chip" data-val="wed">Wed</button>
+              <button class="chip" data-val="thu">Thu</button>
+              <button class="chip" data-val="fri">Fri</button>
+              <button class="chip" data-val="sat">Sat</button>
+              <button class="chip" data-val="sun">Sun</button>
+            </div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-ghost" onclick="goObStep(0)">← Back</button>
+          <button class="btn-primary" id="ob-next-1">Continue →</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Skill & Tool Inventory -->
+      <div class="ob-step" id="ob-step-2">
+        <h1 class="ob-title">Your <span class="grad-text">Toolkit</span></h1>
+        <p class="ob-sub">We'll only suggest projects you can actually make.</p>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Available Tools <span class="label-hint">(select all that apply)</span></label>
+            <div class="chip-group multi" id="tools-chips">
+              <button class="chip active" data-val="scissors">✂️ Scissors</button>
+              <button class="chip" data-val="glue_gun">🔫 Glue Gun</button>
+              <button class="chip active" data-val="hammer">🔨 Hammer</button>
+              <button class="chip" data-val="drill">🔩 Drill</button>
+              <button class="chip" data-val="saw">🪚 Saw</button>
+              <button class="chip" data-val="sewing">🧵 Sewing Kit</button>
+              <button class="chip active" data-val="paint">🖌️ Paint</button>
+              <button class="chip" data-val="soldering">⚡ Soldering Iron</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Household Type</label>
+            <div class="chip-group" id="demo-chips">
+              <button class="chip active" data-val="adult">👤 Solo</button>
+              <button class="chip" data-val="couple">👫 Couple</button>
+              <button class="chip" data-val="family">👨‍👩‍👧 Family</button>
+              <button class="chip" data-val="elderly">🧓 Elderly</button>
+            </div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-ghost" onclick="goObStep(1)">← Back</button>
+          <button class="btn-primary" id="ob-next-2">Continue →</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Pincode (LAST — user trusts app by now) -->
+      <div class="ob-step" id="ob-step-3">
+        <h1 class="ob-title">Almost there — <span class="grad-text">Your Area</span></h1>
+        <p class="ob-sub">We use your pincode only to check if certified waste facilities exist near you. We never store or share it.</p>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="pincode-input">Pincode / Postcode</label>
+            <div class="input-wrap">
+              <span class="input-icon">📍</span>
+              <input type="text" id="pincode-input" placeholder="e.g. 110001" maxlength="10" />
+            </div>
+            <p class="field-hint">🔒 Used only for facility lookup. Never shared.</p>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-ghost" onclick="goObStep(2)">← Back</button>
+          <button class="btn-primary" id="ob-next-3">Build My Profile →</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Success -->
+      <div class="ob-step" id="ob-step-4">
+        <div class="success-anim">
+          <div class="success-ring"></div>
+          <div class="success-check">✓</div>
+        </div>
+        <h1 class="ob-title"><span class="grad-text">All Set!</span></h1>
+        <p class="ob-sub">Your personalized waste intelligence profile is ready.</p>
+        <div class="profile-summary" id="profile-summary-old"></div>
+        <button class="btn-primary" onclick="launchApp()">Launch TerraLoop 🚀</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════
+       MAIN APP
+  ═══════════════════════════════════════════ -->
+  <div id="main-app" class="hidden">
+
+    <!-- Sidebar -->
+    <nav id="sidebar">
+      <div class="nav-logo">
+        <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="20" r="19" stroke="url(#nlg1)" stroke-width="2"/>
+          <path d="M12 20 C12 14 20 10 28 14 L24 18 C20 16 16 18 16 20" stroke="url(#nlg1)" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M28 20 C28 26 20 30 12 26 L16 22 C20 24 24 22 24 20" stroke="url(#nlg2)" stroke-width="2.5" stroke-linecap="round"/>
+          <defs>
+            <linearGradient id="nlg1" x1="0" y1="0" x2="40" y2="40"><stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient>
+            <linearGradient id="nlg2" x1="40" y1="0" x2="0" y2="40"><stop offset="0%" stop-color="#06b6d4"/><stop offset="100%" stop-color="#10b981"/></linearGradient>
+          </defs>
+        </svg>
+        <span>TerraLoop</span>
+      </div>
+      <ul class="nav-links">
+        <li><a href="#" class="nav-item active" data-view="scan" id="nav-scan">
+          <span class="nav-icon">🔍</span><span class="nav-label">Scan</span>
+        </a></li>
+        <li><a href="#" class="nav-item" data-view="garage" id="nav-garage">
+          <span class="nav-icon">🗄️</span><span class="nav-label">Digital Garage</span>
+          <span class="nav-badge" id="garage-badge">3</span>
+        </a></li>
+        <li><a href="#" class="nav-item" data-view="community" id="nav-community">
+          <span class="nav-icon">🌱</span><span class="nav-label">Community</span>
+        </a></li>
+        <li><a href="#" class="nav-item" data-view="impact" id="nav-impact">
+          <span class="nav-icon">🌍</span><span class="nav-label">My Impact</span>
+        </a></li>
+      </ul>
+      <div class="nav-user">
+        <div class="user-avatar">AK</div>
+        <div class="user-info">
+          <span class="user-name">Alex Kumar</span>
+          <span class="user-stat">47 items diverted</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Mobile Bottom Nav -->
+    <nav id="bottom-nav">
+      <button class="bnav-item active" data-view="scan"><span>🔍</span><span>Scan</span></button>
+      <button class="bnav-item" data-view="garage"><span>🗄️</span><span>Garage</span></button>
+      <button class="bnav-item" data-view="community"><span>🌱</span><span>Community</span></button>
+      <button class="bnav-item" data-view="impact"><span>🌍</span><span>Impact</span></button>
+    </nav>
+
+    <main id="content">
+
+      <!-- ── VIEW: SCAN ── -->
+      <div class="view active" id="view-scan">
+        <div class="view-header">
+          <h2 class="view-title">AI <span class="grad-text">Scanner</span></h2>
+          <p class="view-sub">Point, snap, or describe — we figure out the rest</p>
+        </div>
+
+        <div class="scan-layout">
+          <!-- Left: Scanner -->
+          <div class="scan-panel glass-card">
+
+            <!-- Primary: Camera / Scan Zone -->
+            <div class="scan-viewport" id="scan-viewport">
+              <div class="scan-idle" id="scan-idle">
+                <div class="scan-pulse-ring"></div>
+                <div class="scan-pulse-ring delay1"></div>
+                <label class="scan-tap-zone" for="scan-file-input">
+                  <div class="scan-icon-wrap">
+                    <span class="scan-icon-main">📷</span>
+                  </div>
+                  <p class="scan-cta-main">Tap to scan an item</p>
+                  <p class="scan-cta-sub">Upload a photo from your gallery</p>
+                  <input type="file" id="scan-file-input" accept="image/*" hidden />
+                </label>
+              </div>
+              <div class="scan-active hidden" id="scan-active">
+                <div class="scan-beam"></div>
+                <div class="scan-corners">
+                  <span class="corner tl"></span><span class="corner tr"></span>
+                  <span class="corner bl"></span><span class="corner br"></span>
+                </div>
+                <div class="scan-label" id="scan-live-label">Analyzing material…</div>
+              </div>
+              <div class="scan-result hidden" id="scan-result">
+                <div class="result-badge">
+                  <span class="result-icon" id="result-icon">🧴</span>
+                  <div class="result-meta">
+                    <span class="result-material" id="result-material">PET Plastic</span>
+                    <span class="result-grade" id="result-grade">Grade 1 · Recyclable</span>
+                  </div>
+                </div>
+                <div class="material-tags" id="material-tags"></div>
+              </div>
+            </div>
+
+            <!-- OR Divider -->
+            <div class="or-divider">
+              <span class="or-line"></span>
+              <span class="or-text">OR</span>
+              <span class="or-line"></span>
+            </div>
+
+            <!-- Secondary: Text Description -->
+            <div class="describe-section">
+              <p class="describe-label">Describe your item instead</p>
+              <div class="text-scan-wrap">
+                <input type="text" id="scan-text-input" placeholder="e.g. empty 2L plastic bottle…" />
+                <button class="btn-scan" id="btn-scan-text">Go</button>
+              </div>
+            </div>
+
+
+          </div>
+
+          <!-- Right: Results -->
+          <div class="results-panel" id="results-panel">
+
+            <!-- Recommendation Cards -->
+            <div class="rec-container hidden" id="rec-container">
+              <div class="rec-header">
+                <h3 class="panel-title">What you can do with it</h3>
+                <span class="rec-count-badge">3 options</span>
+              </div>
+              <div class="rec-cards" id="rec-cards"></div>
+
+              <!-- Fallback: Facility Check (no map, just info) -->
+              <div class="fallback-notice hidden" id="fallback-notice">
+                <!-- filled by JS based on geo-lookup result -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── VIEW: DIGITAL GARAGE ── -->
+      <div class="view" id="view-garage">
+        <div class="view-header">
+          <h2 class="view-title">Digital <span class="grad-text">Garage</span></h2>
+          <p class="view-sub">Items awaiting safe disposal — we'll notify you when a facility is nearby</p>
+        </div>
+        <div class="garage-stats-row">
+          <div class="gstat-card glass-card">
+            <span class="gstat-icon">⏳</span>
+            <div class="gstat-info">
+              <span class="gstat-val" id="gs-pending">3</span>
+              <span class="gstat-label">Awaiting Disposal</span>
+            </div>
+          </div>
+          <div class="gstat-card glass-card">
+            <span class="gstat-icon">✅</span>
+            <div class="gstat-info">
+              <span class="gstat-val">12</span>
+              <span class="gstat-label">Resolved Items</span>
+            </div>
+          </div>
+          <div class="gstat-card glass-card">
+            <span class="gstat-icon">🔔</span>
+            <div class="gstat-info">
+              <span class="gstat-val">1</span>
+              <span class="gstat-label">Active Alerts</span>
+            </div>
+          </div>
+        </div>
+        <div class="garage-grid" id="garage-grid"></div>
+        <div class="notification-panel glass-card">
+          <div class="notif-header">
+            <span class="notif-icon">🔔</span>
+            <h3>Notifications</h3>
+            <span class="live-dot"></span>
+            <span class="live-label">Live</span>
+          </div>
+          <div class="notif-list" id="notif-list"></div>
+        </div>
+      </div>
+
+      <!-- ── VIEW: COMMUNITY (Instagram Explore style) ── -->
+      <div class="view" id="view-community">
+        <!-- Search bar -->
+        <div class="explore-search-wrap">
+          <span class="explore-search-icon">🔍</span>
+          <input type="text" class="explore-search" placeholder="Search upcycling projects, materials…" id="explore-search" />
+        </div>
+
+        <!-- Stories row -->
+        <div class="stories-row" id="stories-row"></div>
+
+        <!-- Explore grid -->
+        <div class="explore-grid" id="explore-grid"></div>
+      </div>
+
+      <!-- ── VIEW: IMPACT LEDGER (no points) ── -->
+      <div class="view" id="view-impact">
+        <div class="view-header">
+          <h2 class="view-title">My <span class="grad-text">Impact</span></h2>
+          <p class="view-sub">Your real-world environmental contribution</p>
+        </div>
+        <div class="impact-layout">
+
+          <!-- Hero metrics -->
+          <div class="impact-hero glass-card">
+            <div class="impact-metrics">
+              <div class="im-card hero">
+                <span class="im-icon">🌍</span>
+                <span class="im-val" id="co2-val">8.3 kg</span>
+                <span class="im-label">CO₂ Prevented</span>
+              </div>
+              <div class="im-card hero">
+                <span class="im-icon">♻️</span>
+                <span class="im-val">47</span>
+                <span class="im-label">Items Diverted</span>
+              </div>
+              <div class="im-card hero">
+                <span class="im-icon">🛠️</span>
+                <span class="im-val" id="projects-val">4</span>
+                <span class="im-label">Projects Made</span>
+              </div>
+              <div class="im-card hero">
+                <span class="im-icon">🔥</span>
+                <span class="im-val">12</span>
+                <span class="im-label">Day Streak</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Material breakdown -->
+          <div class="material-breakdown glass-card">
+            <h3 class="panel-title">Materials Recycled</h3>
+            <div class="mat-bars" id="mat-bars"></div>
+          </div>
+
+          <!-- Contribution log (what each post contributed) -->
+          <div class="contributions-panel glass-card">
+            <h3 class="panel-title">Project Contributions</h3>
+            <p class="panel-sub">Each project you post, and its real environmental impact</p>
+            <div class="contrib-list" id="contrib-list"></div>
+          </div>
+
+          <!-- Activity log -->
+          <div class="ledger-panel glass-card">
+            <h3 class="panel-title">Activity Log</h3>
+            <div class="ledger-list" id="ledger-list"></div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
