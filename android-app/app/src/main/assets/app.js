@@ -391,6 +391,15 @@ function initScanView() {
   document.getElementById('scan-text-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') document.getElementById('btn-scan-text').click();
   });
+
+  const refreshBtn = document.getElementById('btn-refresh-recs');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', () => {
+      if (AppState.currentScanResult && AppState.currentScanResult.item) {
+        runTextScan(AppState.currentScanResult.item + ' - generate completely new creative upcycle ideas');
+      }
+    });
+  }
 }
 
 async function runImageScan(file) {
@@ -401,6 +410,7 @@ async function runImageScan(file) {
   try {
     const formData = new FormData();
     formData.append('image', file);
+    formData.append('profile', JSON.stringify(AppState.userProfile || {}));
     const result = await API.postFormData('/scan', formData);
     AppState.currentScanResult = result;
     finishScan(result);
@@ -415,7 +425,10 @@ async function runTextScan(description) {
   startPipelineAnimation();
 
   try {
-    const result = await API.post('/scan', { description });
+    const result = await API.post('/scan', { 
+      description,
+      profile: AppState.userProfile || {}
+    });
     AppState.currentScanResult = result;
     finishScan(result);
   } catch (err) {
@@ -441,6 +454,17 @@ function finishScan(result) {
   ['pipe-cv', 'pipe-ctx', 'pipe-rec'].forEach(id =>
     setPipeState(id, 'done', `✓ Complete`)
   );
+
+  // Map AI instructions to recommendations if missing
+  if (result.instructions && !result.recommendations) {
+    result.recommendations = result.instructions.map((inst, idx) => ({
+      type: idx === 0 ? 'recycle' : 'upcycle',
+      typeLabel: idx === 0 ? 'Recycle' : 'Upcycle',
+      title: `Option ${idx + 1}`,
+      desc: inst,
+      tools: []
+    }));
+  }
 
   showScanResult(result);
   showRecommendations(result);
@@ -497,7 +521,14 @@ function showRecommendations(item) {
   const container = document.getElementById('rec-container');
   const cards = document.getElementById('rec-cards');
   const fallback = document.getElementById('fallback-notice');
+  const badge = document.getElementById('rec-badge');
+  
   container.classList.remove('hidden');
+
+  if (badge) {
+    const count = item.recommendations?.filter(r => r.type !== 'recycle').length || 0;
+    badge.textContent = `${count} reuse option${count === 1 ? '' : 's'}`;
+  }
 
   if (!item.recommendations) {
     cards.innerHTML = '';
@@ -510,24 +541,34 @@ function showRecommendations(item) {
   fallback.classList.add('hidden');
   const userTools = AppState.userProfile?.tools || [];
 
-  cards.innerHTML = (item.recommendations || []).map((rec, i) => {
+  const upcycles = item.recommendations.filter(r => r.type !== 'recycle');
+  const recycles = item.recommendations.filter(r => r.type === 'recycle');
+
+  const renderCard = (rec, i) => {
     const toolMatch = (rec.tools || []).every(t => userTools.includes(t));
     return `
-      <div class="rec-card" style="animation-delay:${i * 0.1}s">
+      <div class="rec-card" style="animation-delay:${i * 0.1}s; cursor: pointer;" onclick="openDetailsModal(${i})">
         <span class="rc-type-badge ${rec.type}">${rec.typeLabel}</span>
         <div class="rc-title">${rec.title}</div>
         <div class="rc-desc">${rec.desc}</div>
         <div class="rc-meta">
-          <span class="rc-tag">⏱ ${rec.time}</span>
+          <span class="rc-tag">⏱ ${rec.time || '15 mins'}</span>
           ${rec.tools?.length ? `<span class="rc-tag">🛠 ${rec.tools.join(', ')}</span>` : '<span class="rc-tag">🤙 No tools needed</span>'}
           <span class="rc-tag ${toolMatch ? 'green' : 'amber'}">${toolMatch ? '✅ You have the tools' : '⚠️ Missing tools'}</span>
         </div>
         <div class="effort-bar-wrap">
           <span class="effort-label">Effort</span>
-          <div class="effort-bar"><div class="effort-fill" style="width:${rec.effort}%"></div></div>
+          <div class="effort-bar"><div class="effort-fill" style="width:${rec.effort || 0}%"></div></div>
         </div>
       </div>`;
-  }).join('');
+  };
+
+  cards.innerHTML = upcycles.map((rec, i) => renderCard(rec, item.recommendations.indexOf(rec))).join('');
+  
+  if (recycles.length > 0) {
+    cards.innerHTML += '<div style="margin: 20px 0 10px; border-bottom: 1px solid rgba(255,255,255,0.1);"></div>';
+    cards.innerHTML += recycles.map(rec => renderCard(rec, item.recommendations.indexOf(rec))).join('');
+  }
 }
 
 function renderFacilityResult(facilityLookup, item, el) {
@@ -931,6 +972,37 @@ function initParticles() {
   const loop = () => { ctx.clearRect(0, 0, W, H); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(loop); };
   loop();
 }
+
+window.openDetailsModal = function(index) {
+  const rec = AppState.currentScanResult?.recommendations?.[index];
+  if (!rec) return;
+
+  document.getElementById('details-modal-title').textContent = rec.title;
+  document.getElementById('details-modal-desc').textContent = rec.desc;
+  
+  const stepsContainer = document.getElementById('details-modal-steps');
+  if (rec.steps && rec.steps.length > 0) {
+    stepsContainer.innerHTML = rec.steps.map((step, i) => `
+      <div class="step-item">
+        <div class="step-number">${i + 1}</div>
+        <div class="step-text">${step}</div>
+      </div>
+    `).join('');
+  } else {
+    stepsContainer.innerHTML = '<p style="color:var(--text-muted);font-size:14px;text-align:center;">No detailed steps provided.</p>';
+  }
+
+  const modal = document.getElementById('details-modal');
+  modal.classList.remove('hidden');
+  // Trigger animation
+  setTimeout(() => modal.classList.add('show'), 10);
+};
+
+window.closeDetailsModal = function() {
+  const modal = document.getElementById('details-modal');
+  modal.classList.remove('show');
+  setTimeout(() => modal.classList.add('hidden'), 300); // Wait for transition
+};
 
 // ═══════════════════════════════════════════════
 //  BOOTSTRAP

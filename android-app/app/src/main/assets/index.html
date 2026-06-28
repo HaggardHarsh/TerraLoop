@@ -61,6 +61,23 @@
   </div>
 
   <!-- ═══════════════════════════════════════════
+       DETAILS MODAL
+  ═══════════════════════════════════════════ -->
+  <div id="details-modal" class="modal-overlay hidden">
+    <div class="modal-backdrop" onclick="closeDetailsModal()"></div>
+    <div class="modal-card details-modal-card">
+      <div class="modal-glow"></div>
+      <button class="modal-close-btn" onclick="closeDetailsModal()">✕</button>
+      <h2 class="modal-title" id="details-modal-title">Idea Title</h2>
+      <p class="modal-desc" id="details-modal-desc">Description</p>
+      <div class="details-steps-container" id="details-modal-steps">
+        <!-- Steps go here -->
+      </div>
+      <button class="btn-primary modal-cta" onclick="closeDetailsModal()">Got it!</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
        ONBOARDING — Horizontal Swipe Questionnaire
   ═══════════════════════════════════════════ -->
   <section id="screen-onboarding" class="screen">
@@ -584,9 +601,12 @@
 
             <!-- Recommendation Cards -->
             <div class="rec-container hidden" id="rec-container">
-              <div class="rec-header">
+              <div class="rec-header" style="display:flex; justify-content:space-between; align-items:center;">
                 <h3 class="panel-title">What you can do with it</h3>
-                <span class="rec-count-badge">3 options</span>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <button id="btn-refresh-recs" class="btn-ghost" style="padding: 4px 8px; font-size: 12px;">Refresh 🔄</button>
+                  <span class="rec-count-badge" id="rec-badge">3 options</span>
+                </div>
               </div>
               <div class="rec-cards" id="rec-cards"></div>
 
