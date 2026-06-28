@@ -249,7 +249,10 @@ function goObStep(step) {
 }
 
 window.toggleCompost = function(e) {
-  if (e) e.stopPropagation();
+  if (e) {
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+  }
   selectCompost(!compostState);
 };
 

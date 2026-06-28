@@ -22,7 +22,7 @@ async function callNvidiaAPI(messages, model) {
     body: JSON.stringify({
       model: model,
       messages: messages,
-      max_tokens: 512,
+      max_tokens: 4096,
       temperature: 0.2
     })
   });
@@ -54,7 +54,11 @@ Return ONLY a valid JSON object in this exact format, with no markdown formattin
       "tools": ["scissors"], // Tools required
       "effort": 60, // Estimated effort 0-100
       "time": "15 mins", // Estimated time
-      "steps": ["Step 1...", "Step 2..."]
+      "steps": [
+        "Step 1: Detailed instruction...",
+        "Step 2: Detailed instruction..."
+        // CRITICAL: You MUST provide a highly detailed, 8 to 15 step explanation for how to complete the idea. The complexity and number of steps MUST strongly correlate with the 'effort' value.
+      ]
     }
   ],
   "impact": "A short sentence about the environmental impact."
@@ -74,7 +78,7 @@ app.post('/api/scan', upload.single('image'), async (req, res) => {
     if (req.body && req.body.profile) {
       try {
         const profile = typeof req.body.profile === 'string' ? JSON.parse(req.body.profile) : req.body.profile;
-        userProfileText = `\n\nUSER PROFILE (Tailor your ideas to this):\n- Housing: ${profile.housing || 'Unknown'}\n- Green Space: ${profile.greenSpace || 'Unknown'}\n- Household: ${profile.demographic || profile.demo || 'Unknown'}\n- Available Tools: ${(profile.tools || []).join(', ') || 'None specified'}\n- Composting Available: ${profile.compostAvailable ? 'Yes' : 'No'}\n- Municipal Pickup Days: ${(profile.pickupDays || []).join(', ') || 'None'}\n- Waste Bins Available: ${profile.bins || 'Unknown'}\n- Location (Pincode): ${profile.pincode || 'Unknown'}\n\nCRITICAL: If Composting Available is "No", you MUST NOT suggest composting, compost tea, bokashi, or any similar composting methods.`;
+        userProfileText = `\n\nUSER PROFILE (Tailor your ideas to this):\n- Housing: ${profile.housing || 'Unknown'}\n- Green Space: ${profile.greenSpace || 'Unknown'}\n- Household: ${profile.demographic || profile.demo || 'Unknown'}\n- Available Tools: ${(profile.tools || []).join(', ') || 'None specified'}\n- Composting Available: ${profile.compostAvailable ? 'Yes' : 'No'}\n- Municipal Pickup Days: ${(profile.pickupDays || []).join(', ') || 'None'}\n- Waste Bins Available: ${profile.bins || 'Unknown'}\n- Location (Pincode): ${profile.pincode || 'Unknown'}\n\nCRITICAL: If Composting Available is "No", you MUST NOT suggest composting, compost tea, bokashi, or any similar composting methods.\nCRITICAL: If Green Space is "none", you MUST NOT suggest garden projects, outdoor planters, or any ideas requiring a yard or outdoor space.`;
       } catch(e) {
         console.error("Failed to parse profile", e);
       }
