@@ -248,6 +248,11 @@ function goObStep(step) {
   });
 }
 
+window.toggleCompost = function(e) {
+  if (e) e.stopPropagation();
+  selectCompost(!compostState);
+};
+
 function selectCompost(val) {
   compostState = val;
   const oldYes = document.getElementById('compost-yes');

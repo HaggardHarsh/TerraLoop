@@ -198,25 +198,19 @@
               <div class="form-group">
                 <div class="section-divider"><span>BINS & COMPOSTING</span></div>
                 <div class="chip-grid">
-                  <div class="chip-card stepper-card">
+                  <div class="chip-card stepper-card" onclick="event.stopPropagation()">
                     <div class="chip-title">Number of Bins</div>
                     <div class="stepper-wrap large-stepper" style="margin-top: 8px;">
-                      <button class="stepper-btn" id="sw-bins-dec">−</button>
+                      <button class="stepper-btn" id="sw-bins-dec" onclick="event.stopPropagation()">−</button>
                       <div class="stepper-val" id="sw-bins-val">2</div>
-                      <button class="stepper-btn" id="sw-bins-inc">+</button>
+                      <button class="stepper-btn" id="sw-bins-inc" onclick="event.stopPropagation()">+</button>
                     </div>
                   </div>
-                  <div class="chip-card active" id="sw-compost-yes" onclick="toggleCompost()">
+                  <div class="chip-card active" id="sw-compost-yes" onclick="window.toggleCompost(event)">
                     <div class="chip-check">✓</div>
                     <div class="chip-icon">♻️</div>
                     <div class="chip-title">Composting</div>
                     <div class="chip-desc">I compost organic waste</div>
-                  </div>
-                  <div class="chip-card toggle-card" id="sw-compost-no" onclick="selectCompost(false)" style="display:none;">
-                    <div class="chip-check">✓</div>
-                    <div class="chip-icon">❌</div>
-                    <div class="chip-title">No Composting</div>
-                    <div class="chip-desc">Not available</div>
                   </div>
                 </div>
               </div>

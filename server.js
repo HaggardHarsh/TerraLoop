@@ -74,7 +74,7 @@ app.post('/api/scan', upload.single('image'), async (req, res) => {
     if (req.body && req.body.profile) {
       try {
         const profile = typeof req.body.profile === 'string' ? JSON.parse(req.body.profile) : req.body.profile;
-        userProfileText = `\n\nUSER PROFILE (Tailor your ideas to this):\n- Housing: ${profile.housing || 'Unknown'}\n- Green Space: ${profile.greenSpace || 'Unknown'}\n- Household: ${profile.demo || 'Unknown'}\n- Available Tools: ${(profile.tools || []).join(', ') || 'None specified'}`;
+        userProfileText = `\n\nUSER PROFILE (Tailor your ideas to this):\n- Housing: ${profile.housing || 'Unknown'}\n- Green Space: ${profile.greenSpace || 'Unknown'}\n- Household: ${profile.demographic || profile.demo || 'Unknown'}\n- Available Tools: ${(profile.tools || []).join(', ') || 'None specified'}\n- Composting Available: ${profile.compostAvailable ? 'Yes' : 'No'}\n- Municipal Pickup Days: ${(profile.pickupDays || []).join(', ') || 'None'}\n- Waste Bins Available: ${profile.bins || 'Unknown'}\n- Location (Pincode): ${profile.pincode || 'Unknown'}\n\nCRITICAL: If Composting Available is "No", you MUST NOT suggest composting, compost tea, bokashi, or any similar composting methods.`;
       } catch(e) {
         console.error("Failed to parse profile", e);
       }
@@ -91,7 +91,7 @@ app.post('/api/scan', upload.single('image'), async (req, res) => {
         {
           role: 'user',
           content: [
-            { type: 'text', text: `Identify this item and provide 3 creative reuse/upcycle ideas.${userProfileText}` },
+            { type: 'text', text: `Identify this item and provide recommendations based on the system instructions.${userProfileText}` },
             { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64Image}` } }
           ]
         }
