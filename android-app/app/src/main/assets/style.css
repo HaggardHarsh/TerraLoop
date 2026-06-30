@@ -562,19 +562,22 @@ body {
 #bottom-nav {
   display: none; position: fixed; bottom: 0; left: 0; right: 0;
   background: rgba(10,15,26,0.97); border-top: 1px solid var(--glass-border);
-  z-index: 100; padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+  z-index: 100; padding: 6px 0 max(6px, env(safe-area-inset-bottom));
+  backdrop-filter: blur(20px);
 }
 .bnav-item {
-  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
-  padding: 6px; background: none; border: none; color: var(--text-muted);
-  font-size: 10px; font-family: inherit; font-weight: 500; cursor: pointer; transition: color 0.2s;
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 8px 6px; background: none; border: none; color: var(--text-muted);
+  font-size: 10px; font-family: inherit; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  position: relative;
 }
-.bnav-item span:first-child { font-size: 20px; }
+.bnav-item svg { transition: all 0.2s; }
 .bnav-item.active { color: var(--emerald); }
+.bnav-item.active svg { filter: drop-shadow(0 0 6px rgba(16,185,129,0.4)); }
 
 #content {
-  padding: 32px; overflow-y: auto; max-height: 100vh;
-  background: radial-gradient(ellipse 70% 50% at 70% 0%, rgba(16,185,129,0.05) 0%, transparent 50%), var(--bg-base);
+  padding: 20px 16px 80px; overflow-y: auto; max-height: 100vh;
+  background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(16,185,129,0.06) 0%, transparent 50%), var(--bg-base);
 }
 .view { display: none; }
 .view.active { display: block; }
@@ -583,14 +586,15 @@ body {
 .view-sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
 
 /* ═══ SCAN VIEW ═══ */
-.scan-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.scan-layout { display: flex; flex-direction: column; gap: 20px; }
 .scan-panel { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
 
 .scan-viewport {
-  border-radius: var(--radius-lg); background: rgba(0,0,0,0.3);
-  border: 1px dashed rgba(16,185,129,0.25); overflow: hidden;
+  border-radius: var(--radius-xl); background: rgba(10,20,30,0.6);
+  border: 1px solid rgba(16,185,129,0.2); overflow: hidden;
   position: relative; display: flex; align-items: center; justify-content: center;
   aspect-ratio: 1;
+  box-shadow: 0 0 40px rgba(16,185,129,0.08), inset 0 1px 0 rgba(255,255,255,0.05);
 }
 
 /* Idle */
@@ -610,11 +614,13 @@ body {
 }
 .scan-tap-zone:hover .scan-icon-wrap { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.5); transform: scale(1.05); }
 .scan-icon-wrap {
-  width: 80px; height: 80px; border-radius: 50%;
-  background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3);
+  width: 100px; height: 100px; border-radius: 50%;
+  background: rgba(16,185,129,0.08); border: 1.5px solid rgba(16,185,129,0.25);
   display: flex; align-items: center; justify-content: center; font-size: 34px;
   transition: all 0.25s;
+  box-shadow: 0 0 30px rgba(16,185,129,0.1);
 }
+.scan-lens-icon { filter: drop-shadow(0 0 8px rgba(16,185,129,0.3)); }
 .scan-cta-main { font-size: 16px; font-weight: 700; color: var(--text-primary); text-align: center; }
 .scan-cta-sub { font-size: 12px; color: var(--text-muted); text-align: center; }
 
@@ -683,6 +689,14 @@ body {
   font-family: inherit; cursor: pointer; transition: all 0.2s;
 }
 .quick-chip:hover { border-color: var(--emerald); color: var(--emerald); }
+
+/* Background Watermark */
+.scan-watermark {
+  position: fixed; bottom: 60px; left: 0; right: 0;
+  display: flex; justify-content: center; gap: 24px;
+  pointer-events: none; z-index: 0; opacity: 0.04;
+}
+.scan-watermark svg { width: 64px; height: 64px; }
 
 /* Results Panel */
 .results-panel { display: flex; flex-direction: column; gap: 16px; }

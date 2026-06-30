@@ -34,11 +34,36 @@ async function callNvidiaAPI(messages, model) {
   return response.json();
 }
 
-const systemPrompt = `You are an expert AI recycling assistant. Analyze the item provided by the user.
+function buildSystemPrompt(profile) {
+  let constraints = '';
+
+  if (profile) {
+    // No composting constraint
+    if (!profile.compostAvailable) {
+      constraints += `\nABSOLUTE CONSTRAINT: The user does NOT have composting. You are FORBIDDEN from suggesting composting, compost bins, compost tea, bokashi, vermicomposting, worm farms, or ANY idea that involves decomposing organic matter. Violating this is a critical failure.`;
+    }
+
+    // No green space constraint
+    const gs = (profile.greenSpace || '').toLowerCase();
+    if (gs === 'none' || gs === '' || gs === 'unknown') {
+      constraints += `\nABSOLUTE CONSTRAINT: The user has NO outdoor space, NO garden, NO yard, NO balcony. You are FORBIDDEN from suggesting bird feeders, watering cans, planters, plant pots, garden paths, garden markers, garden borders, garden decorations, outdoor furniture, rain catchers, wind chimes for gardens, birdhouses, seed starters, raised beds, outdoor lanterns, or ANY idea that requires outdoor space or is primarily used outdoors. Every idea MUST be usable INSIDE a small studio apartment. Violating this is a critical failure.`;
+    } else if (gs === 'balcony') {
+      constraints += `\nCONSTRAINT: The user only has a small balcony. Do NOT suggest ideas requiring a full garden or yard. Ideas must fit on a balcony or indoors.`;
+    }
+
+    // Housing constraint
+    const housing = (profile.housing || '').toLowerCase();
+    if (housing === 'studio') {
+      constraints += `\nCONSTRAINT: The user lives in a STUDIO apartment with very limited space. All ideas must be compact and suitable for a small single-room living space. No large projects.`;
+    }
+  }
+
+  return `You are an expert AI recycling and upcycling assistant. Analyze the item provided by the user.
 You MUST provide exactly 4 recommendations. The first 3 MUST be "upcycle" or "reuse" ideas. The 4th MUST be a "recycle" idea.
 CRITICAL RULE: Give HIGHEST priority to creative "upcycle" or "reuse" ideas for the first 3. 
 CRITICAL RULE: For the 4th "recycle" idea, check the user's profile context. If they use a municipal corp/pick-up service (e.g. have pickup days), tell them how to store it safely until pickup. If they have no pickup service, advise if there's a recycling center nearby and how to prepare it.
 CRITICAL RULE: The ideas MUST be influenced by the user's questionnaire profile (e.g. tools they have, living space).
+${constraints}
 
 Return ONLY a valid JSON object in this exact format, with no markdown formatting or other text:
 {
@@ -63,6 +88,7 @@ Return ONLY a valid JSON object in this exact format, with no markdown formattin
   ],
   "impact": "A short sentence about the environmental impact."
 }`;
+}
 
 app.post('/api/user/profile', (req, res) => {
   res.json({ success: true });
@@ -74,15 +100,18 @@ app.post('/api/scan', upload.single('image'), async (req, res) => {
     let model = 'meta/llama-3.1-8b-instruct'; // Default for text
     
     // Parse user profile if provided
+    let profile = null;
     let userProfileText = "";
     if (req.body && req.body.profile) {
       try {
-        const profile = typeof req.body.profile === 'string' ? JSON.parse(req.body.profile) : req.body.profile;
-        userProfileText = `\n\nUSER PROFILE (Tailor your ideas to this):\n- Housing: ${profile.housing || 'Unknown'}\n- Green Space: ${profile.greenSpace || 'Unknown'}\n- Household: ${profile.demographic || profile.demo || 'Unknown'}\n- Available Tools: ${(profile.tools || []).join(', ') || 'None specified'}\n- Composting Available: ${profile.compostAvailable ? 'Yes' : 'No'}\n- Municipal Pickup Days: ${(profile.pickupDays || []).join(', ') || 'None'}\n- Waste Bins Available: ${profile.bins || 'Unknown'}\n- Location (Pincode): ${profile.pincode || 'Unknown'}\n\nCRITICAL: If Composting Available is "No", you MUST NOT suggest composting, compost tea, bokashi, or any similar composting methods.\nCRITICAL: If Green Space is "none", you MUST NOT suggest garden projects, outdoor planters, or any ideas requiring a yard or outdoor space.`;
+        profile = typeof req.body.profile === 'string' ? JSON.parse(req.body.profile) : req.body.profile;
+        userProfileText = `\n\nUSER PROFILE:\n- Housing: ${profile.housing || 'Unknown'}\n- Green Space: ${profile.greenSpace || 'Unknown'}\n- Household: ${profile.demographic || profile.demo || 'Unknown'}\n- Available Tools: ${(profile.tools || []).join(', ') || 'None specified'}\n- Composting Available: ${profile.compostAvailable ? 'Yes' : 'No'}\n- Municipal Pickup Days: ${(profile.pickupDays || []).join(', ') || 'None'}\n- Waste Bins Available: ${profile.bins || 'Unknown'}\n- Location (Pincode): ${profile.pincode || 'Unknown'}`;
       } catch(e) {
         console.error("Failed to parse profile", e);
       }
     }
+
+    const systemPrompt = buildSystemPrompt(profile);
 
     if (req.file) {
       // Image scan

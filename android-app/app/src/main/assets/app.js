@@ -408,6 +408,16 @@ function initScanView() {
       }
     });
   }
+
+  const scanNewBtn = document.getElementById('btn-scan-new');
+  if (scanNewBtn) {
+    scanNewBtn.addEventListener('click', () => {
+      showScanState('idle');
+      resetPipeline();
+      document.getElementById('scan-text-input').value = '';
+      AppState.currentScanResult = null;
+    });
+  }
 }
 
 async function runImageScan(file) {
@@ -510,18 +520,58 @@ function showScanState(state) {
   document.getElementById('scan-idle').classList.add('hidden');
   document.getElementById('scan-active').classList.add('hidden');
   document.getElementById('scan-result').classList.add('hidden');
-  if (state === 'scanning') document.getElementById('scan-active').classList.remove('hidden');
-  else if (state === 'result') document.getElementById('scan-result').classList.remove('hidden');
-  else document.getElementById('scan-idle').classList.remove('hidden');
+
+  // Hide/show the OR divider and text description when scanning or showing results
+  const orDivider = document.querySelector('.or-divider');
+  const describeSection = document.querySelector('.describe-section');
+
+  if (state === 'scanning') {
+    document.getElementById('scan-active').classList.remove('hidden');
+    if (orDivider) orDivider.style.display = 'none';
+    if (describeSection) describeSection.style.display = 'none';
+  } else if (state === 'result') {
+    document.getElementById('scan-result').classList.remove('hidden');
+    if (orDivider) orDivider.style.display = 'none';
+    if (describeSection) describeSection.style.display = 'none';
+  } else {
+    document.getElementById('scan-idle').classList.remove('hidden');
+    if (orDivider) orDivider.style.display = '';
+    if (describeSection) describeSection.style.display = '';
+  }
 }
 
 function showScanResult(item) {
   showScanState('result');
-  document.getElementById('result-icon').textContent = item.icon || '📦';
-  document.getElementById('result-material').textContent = item.material || 'Unknown material';
-  document.getElementById('result-grade').textContent = item.grade || '';
-  document.getElementById('material-tags').innerHTML = (item.tags || []).map(t =>
-    `<span class="mat-tag ${t.cls}">${t.text}</span>`
+
+  // Smart icon based on material type
+  const materialIcons = {
+    'plastic': '🧴', 'pet': '🧴', 'hdpe': '🧴', 'polyethylene': '🧴', 'polypropylene': '🧴',
+    'glass': '🫙', 'cardboard': '📦', 'paper': '📄', 'wood': '🪵', 'plywood': '🪵',
+    'metal': '🔩', 'aluminum': '🥫', 'steel': '🔩', 'tin': '🥫', 'copper': '🔩',
+    'fabric': '👕', 'textile': '👕', 'cotton': '👕', 'cloth': '👕',
+    'rubber': '🛞', 'ceramic': '🏺', 'electronic': '🔌', 'e-waste': '🔌',
+    'organic': '🥬', 'food': '🍎', 'vegetable': '🥬', 'fruit': '🍎',
+    'leather': '👜', 'styrofoam': '📦', 'foam': '📦'
+  };
+  const matLower = (item.material || '').toLowerCase();
+  const itemLower = (item.item || '').toLowerCase();
+  let icon = item.icon || '♻️';
+  for (const [key, emoji] of Object.entries(materialIcons)) {
+    if (matLower.includes(key) || itemLower.includes(key)) { icon = emoji; break; }
+  }
+
+  document.getElementById('result-icon').textContent = icon;
+  document.getElementById('result-material').textContent = item.item || item.material || 'Unknown item';
+  document.getElementById('result-grade').textContent = item.recyclable 
+    ? `♻️ Recyclable · ${item.material}` 
+    : `⚠️ Not easily recyclable · ${item.material}`;
+  
+  // Build material tags from item data
+  const tags = [];
+  if (item.material) tags.push({ text: item.material, cls: 'tag-material' });
+  if (item.recyclable !== undefined) tags.push({ text: item.recyclable ? 'Recyclable' : 'Non-recyclable', cls: item.recyclable ? 'tag-green' : 'tag-amber' });
+  document.getElementById('material-tags').innerHTML = (item.tags || tags).map(t =>
+    `<span class="mat-tag ${t.cls || ''}">${t.text}</span>`
   ).join('');
 }
 
