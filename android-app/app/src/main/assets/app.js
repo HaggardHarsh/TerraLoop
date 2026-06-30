@@ -418,6 +418,25 @@ function initScanView() {
       AppState.currentScanResult = null;
     });
   }
+
+  const saveGarageBtn = document.getElementById('btn-save-garage');
+  if (saveGarageBtn) {
+    saveGarageBtn.addEventListener('click', () => {
+      if (AppState.currentScanResult) {
+        addGarageItem(AppState.currentScanResult);
+        saveGarageBtn.textContent = '✅ Saved!';
+        saveGarageBtn.style.background = 'rgba(16,185,129,0.15)';
+        saveGarageBtn.style.color = '#10b981';
+        saveGarageBtn.style.borderColor = 'rgba(16,185,129,0.3)';
+        setTimeout(() => {
+          saveGarageBtn.textContent = '🗄️ Save to Garage';
+          saveGarageBtn.style.background = 'rgba(6,182,212,0.15)';
+          saveGarageBtn.style.color = '#06b6d4';
+          saveGarageBtn.style.borderColor = 'rgba(6,182,212,0.3)';
+        }, 2000);
+      }
+    });
+  }
 }
 
 async function runImageScan(file) {
@@ -677,14 +696,28 @@ function renderFacilityResult(facilityLookup, item, el) {
 
 async function addGarageItem(item) {
   try {
+    // Derive icon again or use one if it exists
+    const materialIcons = {
+      'plastic': '🧴', 'pet': '🧴', 'hdpe': '🧴', 'polyethylene': '🧴',
+      'glass': '🫙', 'cardboard': '📦', 'paper': '📄', 'wood': '🪵',
+      'metal': '🔩', 'aluminum': '🥫', 'steel': '🔩', 'tin': '🥫',
+      'fabric': '👕', 'textile': '👕', 'cotton': '👕', 'cloth': '👕',
+      'rubber': '🛞', 'ceramic': '🏺', 'electronic': '🔌', 'e-waste': '🔌',
+      'organic': '🥬', 'food': '🍎', 'vegetable': '🥬', 'fruit': '🍎',
+      'leather': '👜', 'styrofoam': '📦', 'foam': '📦'
+    };
+    const matLower = (item.material || '').toLowerCase();
+    const itemLower = (item.item || '').toLowerCase();
+    let icon = item.icon || '♻️';
+    for (const [key, emoji] of Object.entries(materialIcons)) {
+      if (matLower.includes(key) || itemLower.includes(key)) { icon = emoji; break; }
+    }
+
     await API.post('/garage', {
-      icon: item.icon,
-      name: item.material,
-      material: item.material,
-      grade: item.grade,
-      tags: item.tags?.map(t => t.text) || [],
-      instructions: 'Store safely. You will be notified when a facility is available.',
-      fallbackType: item.fallbackType || 'ewaste'
+      icon: icon,
+      name: item.item || item.material || 'Unknown Item',
+      material: item.material || 'Unknown',
+      status: 'Just Added'
     });
     // Refresh badge
     loadGarageBadge();
@@ -913,10 +946,26 @@ function renderImpactSkeleton() {
 }
 
 function renderImpactSummary(summary) {
-  animateNumber('co2-val', summary.co2Saved || 0, v => v.toFixed(1) + ' kg');
-  const itemsEl = document.querySelector('.im-val:nth-of-type(2)');
+  animateNumber('co2-val', summary.kgDiverted || 0, v => v.toFixed(1) + ' kg');
+  // Update Items Diverted (it doesn't have an ID, it's the 2nd im-card hero)
+  const itemsEl = document.querySelectorAll('.im-card.hero .im-val')[1];
+  if (itemsEl) {
+    let itemsVal = 0;
+    const itemsTarget = summary.totalItems || 0;
+    const itemsStep = () => {
+      itemsVal = Math.min(itemsVal + Math.max(1, itemsTarget / 40), itemsTarget);
+      itemsEl.textContent = Math.floor(itemsVal);
+      if (itemsVal < itemsTarget) requestAnimationFrame(itemsStep);
+    };
+    requestAnimationFrame(itemsStep);
+  }
+  
   const projectsEl = document.getElementById('projects-val');
-  if (projectsEl) projectsEl.textContent = summary.projectsMade || 0;
+  if (projectsEl) {
+    animateNumber('projects-val', summary.points || 0, v => Math.floor(v));
+    const projectsLabel = document.querySelector('.im-card.hero:nth-child(3) .im-label');
+    if (projectsLabel) projectsLabel.textContent = "Points Earned";
+  }
 }
 
 function animateNumber(elId, target, formatter) {

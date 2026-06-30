@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
+const { db, timeAgo } = require('./db');
 
 const app = express();
 app.use(cors());
@@ -60,8 +61,11 @@ function buildSystemPrompt(profile) {
 
   return `You are an expert AI recycling and upcycling assistant. Analyze the item provided by the user.
 You MUST provide exactly 4 recommendations. The first 3 MUST be "upcycle" or "reuse" ideas. The 4th MUST be a "recycle" idea.
-CRITICAL RULE: Give HIGHEST priority to creative "upcycle" or "reuse" ideas for the first 3. 
-CRITICAL RULE: For the 4th "recycle" idea, check the user's profile context. If they use a municipal corp/pick-up service (e.g. have pickup days), tell them how to store it safely until pickup. If they have no pickup service, advise if there's a recycling center nearby and how to prepare it.
+
+ABSOLUTE SAFETY CONSTRAINT: If the item is hazardous, toxic, electronic waste containing dangerous components, or a battery (e.g. broken battery, lithium ion, alkaline), you are FORBIDDEN from suggesting ANY "upcycle" or "reuse" ideas that involve opening, cutting, puncturing, or manipulating the dangerous components. For such items, ALL 4 recommendations MUST be "recycle" or "safe disposal" focused. Do NOT suggest making jewelry or lamps out of broken batteries. Safety is paramount.
+
+CRITICAL RULE: For safe items, give HIGHEST priority to creative "upcycle" or "reuse" ideas for the first 3. 
+CRITICAL RULE: For the "recycle" or disposal ideas, check the user's profile context. If they use a municipal corp/pick-up service (e.g. have pickup days), tell them how to store it safely until pickup. If they have no pickup service, advise if there's a recycling center nearby and how to prepare it.
 CRITICAL RULE: The ideas MUST be influenced by the user's questionnaire profile (e.g. tools they have, living space).
 ${constraints}
 
@@ -91,7 +95,19 @@ Return ONLY a valid JSON object in this exact format, with no markdown formattin
 }
 
 app.post('/api/user/profile', (req, res) => {
-  res.json({ success: true });
+  try {
+    const profileData = JSON.stringify(req.body);
+    // Simple upsert for user 1
+    const stmt = db.prepare(`
+      INSERT INTO users (id, profile_data) VALUES (1, ?)
+      ON CONFLICT(id) DO UPDATE SET profile_data = excluded.profile_data
+    `);
+    stmt.run(profileData);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('DB Error:', err);
+    res.status(500).json({ error: 'Failed to save profile' });
+  }
 });
 
 app.post('/api/scan', upload.single('image'), async (req, res) => {
@@ -160,26 +176,39 @@ app.post('/api/scan', upload.single('image'), async (req, res) => {
   }
 });
 
-// --- MOCK ENDPOINTS FOR UI ---
-let garageItems = [
-  { icon: '📦', name: 'Cardboard Box', material: 'Cardboard', status: 'Pending Upcycle', addedStr: '2 days ago' }
-];
-
+// --- DATABASE ENDPOINTS ---
 app.get('/api/garage', (req, res) => {
-  res.json({ count: garageItems.length, items: garageItems });
+  try {
+    const items = db.prepare('SELECT * FROM garage_items ORDER BY created_at DESC').all();
+    const formattedItems = items.map(item => ({
+      ...item,
+      addedStr: timeAgo(item.created_at)
+    }));
+    res.json({ count: formattedItems.length, items: formattedItems });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.post('/api/garage', (req, res) => {
-  if (req.body) {
-    garageItems.push({
-      icon: req.body.icon || '♻️',
-      name: req.body.name || 'Unknown Item',
-      material: req.body.material || 'Unknown',
-      status: 'Just Added',
-      addedStr: 'Just now'
-    });
+  try {
+    if (req.body) {
+      const stmt = db.prepare('INSERT INTO garage_items (icon, name, material, status) VALUES (?, ?, ?, ?)');
+      stmt.run(
+        req.body.icon || '♻️',
+        req.body.name || 'Unknown Item',
+        req.body.material || 'Unknown',
+        'Just Added'
+      );
+      
+      // Also add impact log (e.g. 5 points and 0.5kg per item)
+      const impactStmt = db.prepare('INSERT INTO impact_logs (action_type, points, kg_diverted) VALUES (?, ?, ?)');
+      impactStmt.run('saved_item', 5, 0.5);
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  res.json({ success: true });
 });
 
 app.get('/api/notifications', (req, res) => {
@@ -203,9 +232,29 @@ app.get('/api/posts/stories', (req, res) => {
   ]});
 });
 
-app.get('/api/impact/summary', (req, res) => res.json({ totalItems: 42, kgDiverted: 12.5, points: 350 }));
+app.get('/api/impact/summary', (req, res) => {
+  try {
+    const totalItems = db.prepare('SELECT COUNT(*) as count FROM garage_items').get().count;
+    const totals = db.prepare('SELECT SUM(points) as pts, SUM(kg_diverted) as kg FROM impact_logs').get();
+    
+    res.json({ 
+      totalItems: totalItems || 0, 
+      kgDiverted: totals.kg || 0, 
+      points: totals.pts || 0 
+    });
+  } catch (err) {
+    res.json({ totalItems: 0, kgDiverted: 0, points: 0 });
+  }
+});
 app.get('/api/impact/activity', (req, res) => res.json({ max: 10, data: [2, 5, 8, 3, 10, 6, 9] }));
-app.get('/api/impact/contributions', (req, res) => res.json({ list: [{ label: 'Plastic', count: 18 }, { label: 'Glass', count: 12 }, { label: 'Paper', count: 12 }] }));
+app.get('/api/impact/contributions', (req, res) => {
+  try {
+    const stats = db.prepare('SELECT material as label, COUNT(*) as count FROM garage_items GROUP BY material ORDER BY count DESC LIMIT 5').all();
+    res.json({ list: stats.length ? stats : [{ label: 'Plastic', count: 0 }] });
+  } catch(err) {
+    res.json({ list: [] });
+  }
+});
 app.get('/api/impact/materials', (req, res) => res.json({ list: [{ label: 'Cardboard', percent: 45 }, { label: 'PET Plastic', percent: 30 }, { label: 'Aluminum', percent: 25 }] }));
 
 const PORT = process.env.PORT || 3000;
