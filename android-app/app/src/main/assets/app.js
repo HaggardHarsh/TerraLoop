@@ -376,6 +376,10 @@ function switchView(viewName) {
   document.getElementById(`nav-${viewName}`)?.classList.add('active');
   document.querySelectorAll(`.bnav-item[data-view="${viewName}"]`).forEach(b => b.classList.add('active'));
   AppState.currentView = viewName;
+  
+  // Refresh data dynamically when tab is opened
+  if (viewName === 'garage') initGarageView();
+  if (viewName === 'impact') initImpactView();
 }
 
 // ═══════════════════════════════════════════════
@@ -728,9 +732,10 @@ async function addGarageItem(item) {
 
 async function loadGarageBadge() {
   try {
-    const { count } = await API.get('/garage');
+    const { items } = await API.get('/garage');
+    const pendingCount = (items || []).filter(i => i.status !== 'resolved').length;
     const badge = document.getElementById('garage-badge');
-    if (badge) badge.textContent = count || '';
+    if (badge) badge.textContent = pendingCount || '';
   } catch (e) { /* non-fatal */ }
 }
 
@@ -766,39 +771,62 @@ function renderGarageError() {
 }
 
 function renderGarage(items) {
-  if (!items.length) {
+  const pendingItems = items.filter(i => i.status !== 'resolved');
+  const resolvedCount = items.length - pendingItems.length;
+  
+  const gsResolved = document.getElementById('gs-resolved');
+  if (gsResolved) gsResolved.textContent = resolvedCount;
+
+  if (!pendingItems.length) {
     document.getElementById('garage-grid').innerHTML = `<p style="color:var(--text-muted);font-size:13px;padding:20px">✅ Your garage is empty — no hazardous items pending.</p>`;
     document.getElementById('gs-pending').textContent = '0';
     return;
   }
-  document.getElementById('gs-pending').textContent = items.length;
-  document.getElementById('garage-grid').innerHTML = items.map(item => `
+  document.getElementById('gs-pending').textContent = pendingItems.length;
+  document.getElementById('garage-grid').innerHTML = pendingItems.map(item => `
     <div class="garage-item">
       <div class="gi-header">
         <span class="gi-icon">${item.icon || '📦'}</span>
         <div class="gi-info">
           <div class="gi-name">${item.name}</div>
-          <div class="gi-date">${item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'short' }) : 'Recently added'}</div>
+          <div class="gi-date">${item.created_at ? new Date(item.created_at + 'Z').toLocaleDateString('en-IN', { day:'numeric', month:'short' }) : 'Recently added'}</div>
         </div>
-        <span class="gi-status ${item.status || 'pending'}">${item.statusLabel || 'Awaiting Disposal'}</span>
+        <span class="gi-status pending">Awaiting Disposal</span>
       </div>
-      <p class="gi-instructions">${item.instructions}</p>
-      <div class="gi-tags">${(item.tags || []).map(t => `<span class="gi-tag">${t}</span>`).join('')}</div>
+      ${item.instructions ? `<p class="gi-instructions">${item.instructions}</p>` : ''}
+      <button class="btn-primary" style="margin-top: 12px; width: 100%; padding: 8px; font-size: 13px;" onclick="resolveGarageItem(${item.id})">✅ Mark as Disposed</button>
     </div>
   `).join('');
 }
 
+window.resolveGarageItem = async function(id) {
+  try {
+    await API.post(`/garage/${id}/resolve`);
+    initGarageView();
+    initImpactView();
+    loadGarageBadge();
+  } catch (e) {
+    console.error('Failed to resolve item:', e);
+  }
+};
+
 function renderNotifications(notifications) {
+  // Update stats
+  const gsAlerts = document.getElementById('gs-alerts');
+  if (gsAlerts) gsAlerts.textContent = notifications.length;
+  const gsResolved = document.getElementById('gs-resolved');
+  if (gsResolved) gsResolved.textContent = '0'; // Stub for now
+
   if (!notifications.length) {
     document.getElementById('notif-list').innerHTML = `<p style="color:var(--text-muted);font-size:13px">No notifications yet.</p>`;
     return;
   }
   document.getElementById('notif-list').innerHTML = notifications.map(n => `
     <div class="notif-item">
-      <div class="notif-dot ${n.dot || 'green'}"></div>
+      <div class="notif-dot ${n.type === 'alert' ? 'amber' : 'green'}"></div>
       <div class="notif-content">
-        <div class="notif-msg">${n.message}</div>
-        <div class="notif-time">${n.createdAt ? new Date(n.createdAt).toLocaleString('en-IN') : ''}</div>
+        <div class="notif-msg"><strong>${n.title || ''}</strong><br>${n.desc || n.message || ''}</div>
+        <div class="notif-time">${n.time || (n.createdAt ? new Date(n.createdAt).toLocaleString('en-IN') : '')}</div>
       </div>
     </div>
   `).join('');

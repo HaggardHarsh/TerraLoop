@@ -65,6 +65,7 @@ You MUST provide exactly 4 recommendations. The first 3 MUST be "upcycle" or "re
 ABSOLUTE SAFETY CONSTRAINT: If the item is hazardous, toxic, electronic waste containing dangerous components, or a battery (e.g. broken battery, lithium ion, alkaline), you are FORBIDDEN from suggesting ANY "upcycle" or "reuse" ideas that involve opening, cutting, puncturing, or manipulating the dangerous components. For such items, ALL 4 recommendations MUST be "recycle" or "safe disposal" focused. Do NOT suggest making jewelry or lamps out of broken batteries. Safety is paramount.
 
 CRITICAL RULE: For safe items, give HIGHEST priority to creative "upcycle" or "reuse" ideas for the first 3. 
+CRITICAL RULE: AVOID cliché and overused upcycle ideas like "planters", "vases", "pen/pencil holders", "storage boxes", or "storage containers". You are FORBIDDEN from suggesting "planters" or "storage" in your upcycle ideas. Instead, provide highly creative, unique, practical, and unusual upcycle ideas (e.g., woven baskets, phone amplifiers, jewelry, lampshades, puzzle toys, wall art, loom tools, cleaning gadgets). Think outside the box!
 CRITICAL RULE: For the "recycle" or disposal ideas, check the user's profile context. If they use a municipal corp/pick-up service (e.g. have pickup days), tell them how to store it safely until pickup. If they have no pickup service, advise if there's a recycling center nearby and how to prepare it.
 CRITICAL RULE: The ideas MUST be influenced by the user's questionnaire profile (e.g. tools they have, living space).
 ${constraints}
@@ -195,16 +196,28 @@ app.post('/api/garage', (req, res) => {
     if (req.body) {
       const stmt = db.prepare('INSERT INTO garage_items (icon, name, material, status) VALUES (?, ?, ?, ?)');
       stmt.run(
-        req.body.icon || '♻️',
+        req.body.icon || '📦',
         req.body.name || 'Unknown Item',
         req.body.material || 'Unknown',
-        'Just Added'
+        'pending'
       );
-      
-      // Also add impact log (e.g. 5 points and 0.5kg per item)
-      const impactStmt = db.prepare('INSERT INTO impact_logs (action_type, points, kg_diverted) VALUES (?, ?, ?)');
-      impactStmt.run('saved_item', 5, 0.5);
     }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/garage/:id/resolve', (req, res) => {
+  try {
+    const id = req.params.id;
+    const stmt = db.prepare('UPDATE garage_items SET status = ? WHERE id = ?');
+    stmt.run('resolved', id);
+    
+    // Reward impact points only when actually disposed
+    const impactStmt = db.prepare('INSERT INTO impact_logs (action_type, points, kg_diverted) VALUES (?, ?, ?)');
+    impactStmt.run('disposed_item', 5, 0.5);
+    
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
