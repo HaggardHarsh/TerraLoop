@@ -814,8 +814,6 @@ function renderNotifications(notifications) {
   // Update stats
   const gsAlerts = document.getElementById('gs-alerts');
   if (gsAlerts) gsAlerts.textContent = notifications.length;
-  const gsResolved = document.getElementById('gs-resolved');
-  if (gsResolved) gsResolved.textContent = '0'; // Stub for now
 
   if (!notifications.length) {
     document.getElementById('notif-list').innerHTML = `<p style="color:var(--text-muted);font-size:13px">No notifications yet.</p>`;
