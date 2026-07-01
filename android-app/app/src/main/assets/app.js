@@ -1270,6 +1270,24 @@ function initProfileView() {
     if (!confirm('Are you sure? This will erase your profile and restart onboarding.')) return;
     resetProfile();
   });
+
+  // Edit Profile Modal Listeners
+  document.getElementById('btn-edit-profile')?.addEventListener('click', () => {
+    document.getElementById('modal-edit-profile')?.classList.add('active');
+  });
+  
+  const closeModal = () => {
+    document.getElementById('modal-edit-profile')?.classList.remove('active');
+    updateProfileSummary();
+  };
+  
+  document.getElementById('btn-close-edit')?.addEventListener('click', closeModal);
+  document.getElementById('btn-save-edit')?.addEventListener('click', () => {
+    saveProfileFromUI();
+    closeModal();
+  });
+
+  updateProfileSummary();
 }
 
 function populateProfileChips(gridId, value, isMulti) {
@@ -1373,6 +1391,54 @@ async function resetProfile() {
   showToast('Profile reset. Let\'s start fresh! 🌱');
 }
 
+
+const READABLE_LABELS = {
+  apartment: 'Apartment', house: 'House', condo: 'Condo', studio: 'Studio',
+  none: 'None', balcony: 'Balcony', garden: 'Garden', rooftop: 'Rooftop',
+  scissors: 'Scissors', glue_gun: 'Glue Gun', hammer: 'Hammer', drill: 'Drill',
+  saw: 'Saw', sewing: 'Sewing Kit', paint: 'Paint', soldering: 'Soldering',
+  adult: 'Solo', couple: 'Couple', family: 'Family', elderly: 'Elderly',
+  mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun'
+};
+
+function getReadable(val) {
+  return READABLE_LABELS[val] || val;
+}
+
+function updateProfileSummary() {
+  const profile = AppState.userProfile || {};
+  
+  // Living
+  const h = getReadable(profile.housing || 'Not Set');
+  const g = getReadable(profile.greenSpace || 'Not Set');
+  const livingEl = document.getElementById('ps-val-living');
+  if(livingEl) livingEl.textContent = `${h} • ${g === 'None' ? 'No Green Space' : g}`;
+  
+  // Tools
+  const toolsEl = document.getElementById('ps-val-tools');
+  if(toolsEl) {
+    if(!profile.tools || profile.tools.length === 0) {
+      toolsEl.textContent = 'None';
+    } else {
+      toolsEl.textContent = profile.tools.map(getReadable).join(', ');
+    }
+  }
+  
+  // Demo
+  const d = getReadable(profile.demographic || 'Not Set');
+  const demoEl = document.getElementById('ps-val-demo');
+  if(demoEl) demoEl.textContent = `${d} • ${profile.pincode || 'No Pin'}`;
+  
+  // Waste
+  const wasteEl = document.getElementById('ps-val-waste');
+  if(wasteEl) {
+    const bins = profile.bins ?? 2;
+    const compost = profile.compostAvailable ? 'Compost' : 'No Compost';
+    const pickup = (!profile.pickupDays || profile.pickupDays.length === 0 || profile.pickupDays.includes('none')) 
+      ? 'No Pickup' : profile.pickupDays.map(getReadable).join(', ');
+    wasteEl.textContent = `${bins} Bins • ${compost} • ${pickup}`;
+  }
+}
 // ═══════════════════════════════════════════════
 //  BOOTSTRAP
 // ═══════════════════════════════════════════════
