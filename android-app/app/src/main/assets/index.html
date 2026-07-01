@@ -654,15 +654,19 @@
 
       <!-- ── VIEW: SCAN ── -->
       <div class="view active" id="view-scan">
-        <div class="view-header">
-          <h2 class="view-title">AI <span class="grad-text">Scanner</span></h2>
-          <p class="view-sub">Point, snap, or describe — we figure out the rest</p>
+        <div class="view-header" style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h2 class="view-title">AI <span class="grad-text">Scanner</span></h2>
+            <p class="view-sub">Point, snap, or describe — we figure out the rest</p>
+          </div>
+          <button class="btn-sparkle" id="btn-ai-sparkle">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" fill="url(#sparkGrad)" stroke="rgba(16,185,129,0.5)" stroke-width="0.5"/><path d="M19 3L20 6L23 7L20 8L19 11L18 8L15 7L18 6L19 3Z" fill="rgba(6,182,212,0.7)"/><defs><linearGradient id="sparkGrad" x1="0" y1="0" x2="24" y2="24"><stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs></svg>
+          </button>
         </div>
 
-        <div class="scan-layout">
-          <!-- Left: Scanner -->
+        <!-- ─── SCAN INPUT AREA ─── -->
+        <div class="scan-input-area" id="scan-input-area">
           <div class="scan-panel glass-card">
-
             <!-- Primary: Camera / Scan Zone -->
             <div class="scan-viewport" id="scan-viewport">
               <div class="scan-idle" id="scan-idle">
@@ -671,18 +675,14 @@
                 <label class="scan-tap-zone" for="scan-file-input">
                   <div class="scan-icon-wrap">
                     <svg class="scan-lens-icon" width="72" height="72" viewBox="0 0 72 72" fill="none">
-                      <!-- Outer ring -->
                       <circle cx="36" cy="36" r="34" stroke="rgba(16,185,129,0.3)" stroke-width="1.5"/>
-                      <!-- Shutter blades -->
                       <path d="M36 8 L40 20 L36 18 L32 20 Z" fill="rgba(148,163,184,0.6)" transform="rotate(0 36 36)"/>
                       <path d="M36 8 L40 20 L36 18 L32 20 Z" fill="rgba(148,163,184,0.5)" transform="rotate(60 36 36)"/>
                       <path d="M36 8 L40 20 L36 18 L32 20 Z" fill="rgba(148,163,184,0.6)" transform="rotate(120 36 36)"/>
                       <path d="M36 8 L40 20 L36 18 L32 20 Z" fill="rgba(148,163,184,0.5)" transform="rotate(180 36 36)"/>
                       <path d="M36 8 L40 20 L36 18 L32 20 Z" fill="rgba(148,163,184,0.6)" transform="rotate(240 36 36)"/>
                       <path d="M36 8 L40 20 L36 18 L32 20 Z" fill="rgba(148,163,129,0.5)" transform="rotate(300 36 36)"/>
-                      <!-- Inner lens circle -->
                       <circle cx="36" cy="36" r="14" fill="rgba(16,185,129,0.15)" stroke="rgba(16,185,129,0.4)" stroke-width="1.5"/>
-                      <!-- Center glow dot -->
                       <circle cx="36" cy="36" r="5" fill="url(#lensGlow)"/>
                       <defs>
                         <radialGradient id="lensGlow" cx="50%" cy="50%" r="50%">
@@ -705,20 +705,6 @@
                 </div>
                 <div class="scan-label" id="scan-live-label">Analyzing material…</div>
               </div>
-              <div class="scan-result hidden" id="scan-result">
-                <div class="result-badge">
-                  <span class="result-icon" id="result-icon">🧴</span>
-                  <div class="result-meta">
-                    <span class="result-material" id="result-material">PET Plastic</span>
-                    <span class="result-grade" id="result-grade">Grade 1 · Recyclable</span>
-                  </div>
-                </div>
-                <div class="material-tags" id="material-tags"></div>
-                <div style="display:flex; gap:8px; margin-top:12px;">
-                  <button class="btn-scan-new" id="btn-save-garage" style="flex:1; padding:8px 16px; background:rgba(6,182,212,0.15); border:1px solid rgba(6,182,212,0.3); border-radius:8px; color:#06b6d4; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s;">🗄️ Save to Garage</button>
-                  <button class="btn-scan-new" id="btn-scan-new" style="flex:1; padding:8px 16px; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); border-radius:8px; color:#10b981; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s;">🔄 Scan New Item</button>
-                </div>
-              </div>
             </div>
 
             <!-- OR Divider -->
@@ -736,32 +722,54 @@
                 <button class="btn-scan" id="btn-scan-text">Go</button>
               </div>
             </div>
-
-
           </div>
+        </div>
 
-          <!-- Right: Results -->
-          <div class="results-panel" id="results-panel">
-
-            <!-- Recommendation Cards -->
-            <div class="rec-container hidden" id="rec-container">
-              <div class="rec-header" style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 class="panel-title">What you can do with it</h3>
-                <div style="display:flex; gap:8px; align-items:center;">
-                  <button id="btn-refresh-recs" class="btn-ghost" style="padding: 4px 8px; font-size: 12px;">Refresh 🔄</button>
-                  <span class="rec-count-badge" id="rec-badge">3 options</span>
-                </div>
-              </div>
-              <div class="rec-cards" id="rec-cards"></div>
-
-              <!-- Fallback: Facility Check (no map, just info) -->
-              <div class="fallback-notice hidden" id="fallback-notice">
-                <!-- filled by JS based on geo-lookup result -->
+        <!-- ─── SCAN RESULT CARD ─── -->
+        <div class="scan-result-card glass-card hidden" id="scan-result-card">
+          <div class="src-content">
+            <div class="src-image-wrap" id="src-image-wrap">
+              <span class="src-image-icon" id="src-image-icon">♻️</span>
+            </div>
+            <div class="src-details">
+              <h3 class="src-title" id="src-title">Scanned Item</h3>
+              <div class="src-eco-badge" id="src-eco-badge">
+                <span class="eco-dot">♻️</span>
+                <span class="eco-text" id="src-eco-text">Recyclable · Glass</span>
               </div>
             </div>
           </div>
+          <div class="src-tags" id="src-tags"></div>
+          <div class="src-actions">
+            <button class="btn-action-save" id="btn-save-garage">🗄️ Save to Garage</button>
+            <button class="btn-action-scan" id="btn-scan-new">📷 Scan New Item</button>
+          </div>
         </div>
+
+        <!-- ─── RECOMMENDATIONS ─── -->
+        <div class="rec-section hidden" id="rec-container">
+          <div class="rec-header">
+            <h3 class="rec-section-title">What you can do with it</h3>
+            <div class="rec-header-actions">
+              <button class="btn-ghost-sm" id="btn-refresh-recs">🔄 Refresh</button>
+              <span class="rec-count-pill" id="rec-badge">3 reuse options</span>
+            </div>
+          </div>
+
+          <!-- Carousel -->
+          <div class="rec-carousel" id="rec-carousel">
+            <div class="rec-carousel-track" id="rec-cards"></div>
+          </div>
+          <div class="rec-dots" id="rec-dots"></div>
+
+          <!-- Fallback -->
+          <div class="fallback-notice hidden" id="fallback-notice"></div>
+        </div>
+
+
+
       </div>
+
 
       <!-- ── VIEW: DIGITAL GARAGE ── -->
       <div class="view" id="view-garage">

@@ -436,13 +436,45 @@ function initScanView() {
         saveGarageBtn.style.borderColor = 'rgba(16,185,129,0.3)';
         setTimeout(() => {
           saveGarageBtn.textContent = '🗄️ Save to Garage';
-          saveGarageBtn.style.background = 'rgba(6,182,212,0.15)';
-          saveGarageBtn.style.color = '#06b6d4';
-          saveGarageBtn.style.borderColor = 'rgba(6,182,212,0.3)';
+          saveGarageBtn.style.background = '';
+          saveGarageBtn.style.color = '';
+          saveGarageBtn.style.borderColor = '';
         }, 2000);
       }
     });
   }
+
+  // Carousel scroll -> dots sync
+  const carousel = document.getElementById('rec-carousel');
+  if (carousel) {
+    carousel.addEventListener('scroll', () => {
+      const track = document.getElementById('rec-cards');
+      const cards = track.querySelectorAll('.idea-card');
+      if (!cards.length) return;
+      const scrollLeft = carousel.scrollLeft;
+      const cardWidth = cards[0].offsetWidth + 14; // gap
+      const activeIdx = Math.round(scrollLeft / cardWidth);
+      document.querySelectorAll('.rec-dot').forEach((dot, i) => {
+        dot.classList.toggle('active', i === activeIdx);
+      });
+    });
+  }
+
+  // Update impact snippet count
+  updateScanCount();
+}
+
+function updateScanCount() {
+  const el = document.getElementById('is-scan-count');
+  if (!el) return;
+  const count = parseInt(localStorage.getItem('tl_scan_count') || '0');
+  el.innerHTML = `${count} <span style="opacity:0.5">⊘</span>`;
+}
+
+function incrementScanCount() {
+  const count = parseInt(localStorage.getItem('tl_scan_count') || '0') + 1;
+  localStorage.setItem('tl_scan_count', count.toString());
+  updateScanCount();
 }
 
 async function runImageScan(file) {
@@ -542,24 +574,33 @@ function setPipeState(id, state, detail) {
 }
 
 function showScanState(state) {
-  document.getElementById('scan-idle').classList.add('hidden');
-  document.getElementById('scan-active').classList.add('hidden');
-  document.getElementById('scan-result').classList.add('hidden');
-
-  // Hide/show the OR divider and text description when scanning or showing results
+  const scanInput = document.getElementById('scan-input-area');
+  const scanIdle = document.getElementById('scan-idle');
+  const scanActive = document.getElementById('scan-active');
+  const resultCard = document.getElementById('scan-result-card');
+  const recContainer = document.getElementById('rec-container');
   const orDivider = document.querySelector('.or-divider');
   const describeSection = document.querySelector('.describe-section');
 
+  // Reset all
+  scanIdle?.classList.add('hidden');
+  scanActive?.classList.add('hidden');
+  resultCard?.classList.add('hidden');
+
   if (state === 'scanning') {
-    document.getElementById('scan-active').classList.remove('hidden');
+    scanInput.style.display = '';
+    scanActive?.classList.remove('hidden');
     if (orDivider) orDivider.style.display = 'none';
     if (describeSection) describeSection.style.display = 'none';
   } else if (state === 'result') {
-    document.getElementById('scan-result').classList.remove('hidden');
-    if (orDivider) orDivider.style.display = 'none';
-    if (describeSection) describeSection.style.display = 'none';
+    scanInput.style.display = 'none';
+    resultCard?.classList.remove('hidden');
   } else {
-    document.getElementById('scan-idle').classList.remove('hidden');
+    // idle
+    scanInput.style.display = '';
+    scanIdle?.classList.remove('hidden');
+    resultCard?.classList.add('hidden');
+    recContainer?.classList.add('hidden');
     if (orDivider) orDivider.style.display = '';
     if (describeSection) describeSection.style.display = '';
   }
@@ -567,6 +608,7 @@ function showScanState(state) {
 
 function showScanResult(item) {
   showScanState('result');
+  incrementScanCount();
 
   // Smart icon based on material type
   const materialIcons = {
@@ -585,19 +627,32 @@ function showScanResult(item) {
     if (matLower.includes(key) || itemLower.includes(key)) { icon = emoji; break; }
   }
 
-  document.getElementById('result-icon').textContent = icon;
-  document.getElementById('result-material').textContent = item.item || item.material || 'Unknown item';
-  document.getElementById('result-grade').textContent = item.recyclable 
-    ? `♻️ Recyclable · ${item.material}` 
-    : `⚠️ Not easily recyclable · ${item.material}`;
-  
-  // Build material tags from item data
-  const tags = [];
-  if (item.material) tags.push({ text: item.material, cls: 'tag-material' });
-  if (item.recyclable !== undefined) tags.push({ text: item.recyclable ? 'Recyclable' : 'Non-recyclable', cls: item.recyclable ? 'tag-green' : 'tag-amber' });
-  document.getElementById('material-tags').innerHTML = (item.tags || tags).map(t =>
-    `<span class="mat-tag ${t.cls || ''}">${t.text}</span>`
-  ).join('');
+  // Set image icon
+  const imgWrap = document.getElementById('src-image-wrap');
+  const imgIcon = document.getElementById('src-image-icon');
+  if (imgIcon) imgIcon.textContent = icon;
+
+  // Set title
+  document.getElementById('src-title').textContent = item.item || item.material || 'Unknown item';
+
+  // Set eco badge
+  const ecoText = document.getElementById('src-eco-text');
+  if (ecoText) {
+    ecoText.textContent = item.recyclable 
+      ? `Recyclable · ${item.material}` 
+      : `Not easily recyclable · ${item.material}`;
+  }
+  const ecoDot = document.querySelector('.eco-dot');
+  if (ecoDot) ecoDot.textContent = item.recyclable ? '♻️' : '⚠️';
+
+  // Tags
+  const tagsEl = document.getElementById('src-tags');
+  if (tagsEl) {
+    const tags = [];
+    if (item.material) tags.push(`💎 ${item.material}`);
+    if (item.recyclable !== undefined) tags.push(`🗑️ ${item.recyclable ? 'Recyclable' : 'Non-recyclable'}`);
+    tagsEl.innerHTML = tags.map(t => `<span class="src-tag">${t}</span>`).join('');
+  }
 }
 
 function showRecommendations(item) {
@@ -605,16 +660,18 @@ function showRecommendations(item) {
   const cards = document.getElementById('rec-cards');
   const fallback = document.getElementById('fallback-notice');
   const badge = document.getElementById('rec-badge');
+  const dotsEl = document.getElementById('rec-dots');
   
   container.classList.remove('hidden');
 
   if (badge) {
     const count = item.recommendations?.filter(r => r.type !== 'recycle').length || 0;
-    badge.textContent = `${count} reuse option${count === 1 ? '' : 's'}`;
+    badge.textContent = `✏️ ${count} reuse option${count === 1 ? '' : 's'}`;
   }
 
   if (!item.recommendations) {
     cards.innerHTML = '';
+    if (dotsEl) dotsEl.innerHTML = '';
     fallback.classList.remove('hidden');
     renderFacilityResult(item.facilityLookup, item, fallback);
     addGarageItem(item);
@@ -624,34 +681,58 @@ function showRecommendations(item) {
   fallback.classList.add('hidden');
   const userTools = AppState.userProfile?.tools || [];
 
-  const upcycles = item.recommendations.filter(r => r.type !== 'recycle');
-  const recycles = item.recommendations.filter(r => r.type === 'recycle');
+  // Type icon mapping
+  const typeIcons = { upcycle: '🟣', recycle: '♻️', donate: '💙', compost: '🟠' };
+  const typeEmoji = { upcycle: '🎨', recycle: '♻️', donate: '🤝', compost: '🌱' };
 
-  const renderCard = (rec, i) => {
+  const renderIdeaCard = (rec, i) => {
     const toolMatch = (rec.tools || []).every(t => userTools.includes(t));
+    const missingTools = (rec.tools || []).filter(t => !userTools.includes(t));
+    const badgeType = rec.type || 'upcycle';
+    const badgeLabel = rec.typeLabel || rec.type || 'Upcycle';
+
     return `
-      <div class="rec-card" style="animation-delay:${i * 0.1}s; cursor: pointer;" onclick="openDetailsModal(${i})">
-        <span class="rc-type-badge ${rec.type}">${rec.typeLabel}</span>
-        <div class="rc-title">${rec.title}</div>
-        <div class="rc-desc">${rec.desc}</div>
-        <div class="rc-meta">
-          <span class="rc-tag">⏱ ${rec.time || '15 mins'}</span>
-          ${rec.tools?.length ? `<span class="rc-tag">🛠 ${rec.tools.join(', ')}</span>` : '<span class="rc-tag">🤙 No tools needed</span>'}
-          <span class="rc-tag ${toolMatch ? 'green' : 'amber'}">${toolMatch ? '✅ You have the tools' : '⚠️ Missing tools'}</span>
+      <div class="idea-card" onclick="openDetailsModal(${i})">
+        <div class="ic-top">
+          <div class="ic-body">
+            <span class="ic-badge ${badgeType}">${typeEmoji[badgeType] || '🔄'} ${badgeLabel.toUpperCase()}</span>
+            <div class="ic-title">${rec.title}</div>
+            <div class="ic-desc">${rec.desc}</div>
+          </div>
+          <div class="ic-image">
+            <span class="ic-image-placeholder">${typeEmoji[badgeType] || '♻️'}</span>
+          </div>
         </div>
-        <div class="effort-bar-wrap">
-          <span class="effort-label">Effort</span>
-          <div class="effort-bar"><div class="effort-fill" style="width:${rec.effort || 0}%"></div></div>
+        <div class="ic-chips">
+          <span class="ic-chip">⏱ ${rec.time || '15 mins'}</span>
+          ${rec.tools?.length ? `<span class="ic-chip">🛠 ${rec.tools.join(', ')}</span>` : '<span class="ic-chip">🤙 No tools needed</span>'}
+        </div>
+        ${!toolMatch && missingTools.length ? `<span class="ic-missing-tools">⚠️ Missing tools</span>` : ''}
+        <div class="ic-effort">
+          <span class="ic-effort-label">Effort</span>
+          <div class="ic-effort-bar"><div class="ic-effort-fill" style="width:${rec.effort || 40}%"></div></div>
         </div>
       </div>`;
   };
 
-  cards.innerHTML = upcycles.map((rec, i) => renderCard(rec, item.recommendations.indexOf(rec))).join('');
-  
-  if (recycles.length > 0) {
-    cards.innerHTML += '<div style="margin: 20px 0 10px; border-bottom: 1px solid rgba(255,255,255,0.1);"></div>';
-    cards.innerHTML += recycles.map(rec => renderCard(rec, item.recommendations.indexOf(rec))).join('');
+  const allRecs = item.recommendations;
+  cards.innerHTML = allRecs.map((rec, i) => renderIdeaCard(rec, i)).join('');
+
+  // Build dots
+  if (dotsEl) {
+    dotsEl.innerHTML = allRecs.map((_, i) => 
+      `<span class="rec-dot ${i === 0 ? 'active' : ''}" onclick="scrollToRecCard(${i})"></span>`
+    ).join('');
   }
+}
+
+function scrollToRecCard(idx) {
+  const carousel = document.getElementById('rec-carousel');
+  const track = document.getElementById('rec-cards');
+  const cards = track.querySelectorAll('.idea-card');
+  if (!cards[idx]) return;
+  const cardWidth = cards[0].offsetWidth + 14;
+  carousel.scrollTo({ left: cardWidth * idx, behavior: 'smooth' });
 }
 
 function renderFacilityResult(facilityLookup, item, el) {
