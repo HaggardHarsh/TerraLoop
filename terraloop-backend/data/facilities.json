@@ -1,0 +1,37 @@
+{
+  "ewaste": {
+    "110001": [
+      { "name": "EcoTech E-Waste Hub", "icon": "💻", "distance": "1.2 km", "hours": "Mon–Sat 10am–5pm", "accepts": "Electronics, Laptops, Tablets, Cables", "phone": "+91 11 2345 6789" },
+      { "name": "Green Cycle Centre", "icon": "♻️", "distance": "0.8 km", "hours": "Mon–Sun 9am–6pm", "accepts": "Mixed E-Waste, Batteries, Chargers", "phone": "+91 11 9876 5432" }
+    ],
+    "110002": [
+      { "name": "Saathi E-Waste Collection", "icon": "💻", "distance": "2.1 km", "hours": "Tue, Thu, Sat 10am–4pm", "accepts": "Phones, Tablets, Laptops", "phone": "+91 11 3456 7890" }
+    ],
+    "400001": [
+      { "name": "Mumbai E-Waste Facility", "icon": "💻", "distance": "1.5 km", "hours": "Mon–Fri 9am–5pm", "accepts": "All Electronics", "phone": "+91 22 1234 5678" }
+    ],
+    "560001": [
+      { "name": "Bangalore E-Cycle Hub", "icon": "♻️", "distance": "0.9 km", "hours": "Mon–Sat 10am–6pm", "accepts": "Electronics, Batteries, Cables", "phone": "+91 80 9876 1234" }
+    ],
+    "DEFAULT": []
+  },
+  "hazardous": {
+    "110001": [
+      { "name": "HazMat Safe Disposal", "icon": "☠️", "distance": "2.1 km", "hours": "Mon, Thu 9am–4pm", "accepts": "Chemicals, Paint, Batteries, Solvents", "phone": "+91 11 5678 9012" }
+    ],
+    "400001": [
+      { "name": "Mumbai Chemical Disposal Centre", "icon": "⚗️", "distance": "3.2 km", "hours": "Mon–Fri 8am–3pm", "accepts": "Paints, Pesticides, Solvents", "phone": "+91 22 2345 6789" }
+    ],
+    "DEFAULT": []
+  },
+  "glass": {
+    "DEFAULT": [
+      { "name": "Municipal Recycling Bin", "icon": "🗑️", "distance": "< 0.5 km", "hours": "Always open", "accepts": "Clean glass bottles and jars", "phone": null }
+    ]
+  },
+  "organic": {
+    "DEFAULT": [
+      { "name": "Municipal Composting Station", "icon": "🌿", "distance": "< 1 km", "hours": "Mon–Sat 8am–6pm", "accepts": "Food waste, garden waste", "phone": null }
+    ]
+  }
+}
