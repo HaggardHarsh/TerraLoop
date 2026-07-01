@@ -983,3 +983,356 @@ body {
   .profile-summary { grid-template-columns: 1fr; }
   .impact-metrics { grid-template-columns: 1fr 1fr; }
 }
+
+/* ═══ PROFILE & SETTINGS ═══ */
+
+/* 1. Scroll area */
+.profile-scroll-area {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 20px 100px 20px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 2. Hero card */
+.profile-hero {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-card);
+  padding: 32px 24px;
+  text-align: center;
+  width: 100%;
+}
+
+/* 3. Avatar — gradient ring */
+.profile-avatar-lg {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--emerald), var(--cyan));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  padding: 3px;
+}
+.profile-avatar-lg .avatar-inner {
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  border-radius: 50%;
+  background: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 32px;
+  color: var(--emerald);
+}
+
+/* 4. Name */
+.profile-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+/* 5. User ID */
+.profile-userid {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 4px;
+}
+
+/* 6. Member since */
+.profile-member-since {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+/* 7. Quick stats */
+.profile-quick-stats {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+}
+.pqs-item {
+  text-align: center;
+}
+.pqs-val {
+  font-size: 22px;
+  font-weight: 800;
+  display: block;
+  background: linear-gradient(135deg, var(--emerald), var(--cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.pqs-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 8. Section card */
+.profile-section {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+}
+.profile-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.profile-section-icon {
+  font-size: 20px;
+}
+.profile-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+}
+
+/* 9. Chip grid */
+.profile-chip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
+}
+.profile-chip {
+  position: relative;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-card);
+  padding: 10px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.profile-chip .pc-icon {
+  display: block;
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+.profile-chip .pc-label {
+  display: block;
+  font-size: 11px;
+}
+.profile-chip.active {
+  border-color: rgba(16,185,129,0.4);
+  background: rgba(16,185,129,0.1);
+  color: var(--emerald);
+}
+.profile-chip.active::after {
+  content: '✓';
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 10px;
+  color: var(--emerald);
+}
+
+/* 10. Input row */
+.profile-input-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+.profile-input-row .input-wrap {
+  flex: 1;
+}
+
+/* 11. Stepper */
+.profile-stepper {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: center;
+  margin: 12px 0;
+}
+.profile-stepper button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.profile-stepper button:hover {
+  border-color: rgba(16,185,129,0.3);
+  background: var(--glass-hover);
+}
+.profile-stepper .stepper-val {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--emerald);
+  min-width: 40px;
+  text-align: center;
+}
+
+/* 12. Toggle row */
+.profile-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--glass-border);
+}
+.profile-toggle-row:last-child {
+  border-bottom: none;
+}
+.profile-toggle-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.profile-toggle-label span:first-child {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.profile-toggle-label span:last-child {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* 13. Toggle switch */
+.toggle-switch {
+  width: 48px;
+  height: 26px;
+  border-radius: 13px;
+  background: rgba(255,255,255,0.1);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.3s;
+  flex-shrink: 0;
+}
+.toggle-switch::after {
+  content: '';
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: white;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s;
+}
+.toggle-switch.active {
+  background: var(--emerald);
+}
+.toggle-switch.active::after {
+  transform: translateX(22px);
+}
+
+/* 14. Danger outline button */
+.btn-danger-outline {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: 1px solid rgba(244,63,94,0.3);
+  color: #f43f5e;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: inherit;
+}
+.btn-danger-outline:hover {
+  background: rgba(244,63,94,0.1);
+  border-color: rgba(244,63,94,0.5);
+}
+
+/* 15. Toast notification */
+.toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(16,185,129,0.95);
+  color: white;
+  padding: 12px 24px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 2000;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  box-shadow: 0 4px 20px rgba(16,185,129,0.3);
+  pointer-events: none;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* 16. Responsive — bottom nav with 5 items */
+@media (max-width: 768px) {
+  #bottom-nav .bnav-item { min-width: 0; }
+  #bottom-nav .bnav-item span { font-size: 9px; }
+  #bottom-nav .bnav-item svg { width: 20px; height: 20px; }
+}
+
+/* 17. Compost toggle */
+.profile-compost-toggle {
+  display: flex;
+  gap: 8px;
+}
+.pct-btn {
+  flex: 1;
+  padding: 10px;
+  text-align: center;
+  border-radius: var(--radius-md);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.pct-btn.active {
+  border-color: rgba(16,185,129,0.4);
+  background: rgba(16,185,129,0.1);
+  color: var(--emerald);
+}
+.pct-btn.no.active {
+  border-color: rgba(244,63,94,0.3);
+  background: rgba(244,63,94,0.08);
+  color: #f43f5e;
+}
+
+/* 18. Version label */
+.profile-version {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 8px 0;
+}

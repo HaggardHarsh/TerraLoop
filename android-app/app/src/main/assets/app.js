@@ -357,6 +357,7 @@ function initMainApp() {
   initGarageView();
   initCommunityView();
   initImpactView();
+  initProfileView();
 }
 
 function initNavigation() {
@@ -380,6 +381,7 @@ function switchView(viewName) {
   // Refresh data dynamically when tab is opened
   if (viewName === 'garage') initGarageView();
   if (viewName === 'impact') initImpactView();
+  if (viewName === 'profile') initProfileView();
 }
 
 // ═══════════════════════════════════════════════
@@ -1136,6 +1138,240 @@ window.closeDetailsModal = function() {
   modal.classList.remove('show');
   setTimeout(() => modal.classList.add('hidden'), 300); // Wait for transition
 };
+
+// ═══════════════════════════════════════════════
+//  PROFILE & SETTINGS
+// ═══════════════════════════════════════════════
+
+let profileInitialized = false;
+
+function initProfileView() {
+  const profile = AppState.userProfile || {};
+
+  // Hero card
+  const uid = USER_ID || 'user_xxx';
+  const initial = uid.charAt(0).toUpperCase();
+  const avatarEl = document.getElementById('profile-avatar-letter');
+  if (avatarEl) avatarEl.textContent = initial;
+  const nameEl = document.getElementById('profile-display-name');
+  if (nameEl) nameEl.textContent = 'TerraLoop User';
+  const uidEl = document.getElementById('profile-user-id');
+  if (uidEl) uidEl.textContent = uid.length > 24 ? uid.slice(0, 24) + '…' : uid;
+
+  // Quick stats from impact API
+  API.get('/impact/summary').then(data => {
+    const itemsEl = document.getElementById('pqs-items');
+    const ptsEl = document.getElementById('pqs-points');
+    const kgEl = document.getElementById('pqs-kg');
+    if (itemsEl) itemsEl.textContent = data.totalItems || 0;
+    if (ptsEl) ptsEl.textContent = data.points || 0;
+    if (kgEl) kgEl.textContent = (data.kgDiverted || 0).toFixed(1);
+  }).catch(() => {});
+
+  // Populate chip selections
+  populateProfileChips('pf-housing-chips', profile.housing, false);
+  populateProfileChips('pf-greenspace-chips', profile.greenSpace, false);
+  populateProfileChips('pf-tools-chips', profile.tools || [], true);
+  populateProfileChips('pf-demo-chips', profile.demographic, false);
+  populateProfileChips('pf-pickup-chips', profile.pickupDays || [], true);
+
+  // Bins stepper
+  const binsVal = document.getElementById('pf-bins-val');
+  if (binsVal) binsVal.textContent = profile.bins ?? binsCount;
+
+  // Composting
+  const cYes = document.getElementById('pf-compost-yes');
+  const cNo = document.getElementById('pf-compost-no');
+  const compost = profile.compostAvailable !== undefined ? profile.compostAvailable : compostState;
+  if (cYes) cYes.classList.toggle('active', compost);
+  if (cNo) cNo.classList.toggle('active', !compost);
+
+  // Pincode
+  const pcInput = document.getElementById('pf-pincode-input');
+  if (pcInput) pcInput.value = profile.pincode || '';
+
+  // Only attach event listeners once
+  if (profileInitialized) return;
+  profileInitialized = true;
+
+  // Single-select chip grids
+  ['pf-housing-chips', 'pf-greenspace-chips', 'pf-demo-chips'].forEach(gridId => {
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
+    grid.querySelectorAll('.profile-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        grid.querySelectorAll('.profile-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        saveProfileFromUI();
+      });
+    });
+  });
+
+  // Multi-select chip grids (tools, pickup days)
+  ['pf-tools-chips', 'pf-pickup-chips'].forEach(gridId => {
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
+    grid.querySelectorAll('.profile-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const noneChip = grid.querySelector('[data-val="none"]');
+        if (chip.dataset.val === 'none') {
+          grid.querySelectorAll('.profile-chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+        } else {
+          if (noneChip) noneChip.classList.remove('active');
+          chip.classList.toggle('active');
+        }
+        saveProfileFromUI();
+      });
+    });
+  });
+
+  // Bins stepper
+  document.getElementById('pf-bins-dec')?.addEventListener('click', () => {
+    const el = document.getElementById('pf-bins-val');
+    let v = parseInt(el.textContent) || 0;
+    if (v > 0) { v--; el.textContent = v; saveProfileFromUI(); }
+  });
+  document.getElementById('pf-bins-inc')?.addEventListener('click', () => {
+    const el = document.getElementById('pf-bins-val');
+    let v = parseInt(el.textContent) || 0;
+    if (v < 9) { v++; el.textContent = v; saveProfileFromUI(); }
+  });
+
+  // Composting toggle
+  document.getElementById('pf-compost-yes')?.addEventListener('click', () => {
+    document.getElementById('pf-compost-yes').classList.add('active');
+    document.getElementById('pf-compost-no').classList.remove('active');
+    saveProfileFromUI();
+  });
+  document.getElementById('pf-compost-no')?.addEventListener('click', () => {
+    document.getElementById('pf-compost-no').classList.add('active');
+    document.getElementById('pf-compost-yes').classList.remove('active');
+    saveProfileFromUI();
+  });
+
+  // Pincode debounced save
+  let pincodeTimer = null;
+  document.getElementById('pf-pincode-input')?.addEventListener('input', () => {
+    clearTimeout(pincodeTimer);
+    pincodeTimer = setTimeout(() => saveProfileFromUI(), 800);
+  });
+
+  // Preference toggles
+  document.querySelectorAll('#pf-toggle-notif, #pf-toggle-creative').forEach(toggle => {
+    toggle.addEventListener('click', () => {
+      toggle.classList.toggle('active');
+      showToast('Preference updated ✓');
+    });
+  });
+
+  // Reset profile
+  document.getElementById('btn-reset-profile')?.addEventListener('click', () => {
+    if (!confirm('Are you sure? This will erase your profile and restart onboarding.')) return;
+    resetProfile();
+  });
+}
+
+function populateProfileChips(gridId, value, isMulti) {
+  const grid = document.getElementById(gridId);
+  if (!grid) return;
+  grid.querySelectorAll('.profile-chip').forEach(chip => {
+    if (isMulti) {
+      const arr = Array.isArray(value) ? value : [];
+      chip.classList.toggle('active', arr.includes(chip.dataset.val));
+    } else {
+      chip.classList.toggle('active', chip.dataset.val === value);
+    }
+  });
+}
+
+function collectProfileFromUI() {
+  const housing = document.querySelector('#pf-housing-chips .profile-chip.active')?.dataset.val || '';
+  const greenSpace = document.querySelector('#pf-greenspace-chips .profile-chip.active')?.dataset.val || '';
+  const demographic = document.querySelector('#pf-demo-chips .profile-chip.active')?.dataset.val || '';
+  const tools = [...document.querySelectorAll('#pf-tools-chips .profile-chip.active')].map(c => c.dataset.val);
+  const pickupDays = [...document.querySelectorAll('#pf-pickup-chips .profile-chip.active')].map(c => c.dataset.val);
+  const bins = parseInt(document.getElementById('pf-bins-val')?.textContent) || 0;
+  const compostAvailable = document.getElementById('pf-compost-yes')?.classList.contains('active') ?? true;
+  const pincode = document.getElementById('pf-pincode-input')?.value.trim() || '';
+
+  return {
+    userId: USER_ID,
+    housing,
+    greenSpace,
+    bins,
+    compostAvailable,
+    pickupDays,
+    tools,
+    demographic,
+    pincode
+  };
+}
+
+async function saveProfileFromUI() {
+  const profile = collectProfileFromUI();
+  AppState.userProfile = profile;
+  localStorage.setItem('tl_profile', JSON.stringify(profile));
+
+  // Sync global state used by onboarding/scan
+  binsCount = profile.bins;
+  compostState = profile.compostAvailable;
+
+  try {
+    await API.post('/user/profile', profile);
+  } catch (e) {
+    console.warn('Profile save failed:', e.message);
+  }
+
+  showToast('Profile updated ✓');
+}
+
+function showToast(message) {
+  // Remove any existing toast
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+
+  // Trigger animation
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      toast.classList.add('show');
+    });
+  });
+
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 2000);
+}
+
+async function resetProfile() {
+  // Clear local storage
+  localStorage.removeItem('tl_profile');
+  AppState.userProfile = {};
+  binsCount = 2;
+  compostState = true;
+  profileInitialized = false;
+
+  // Clear server
+  try {
+    await fetch(`${API_BASE}/user/profile`, {
+      method: 'DELETE',
+      headers: API.headers()
+    });
+  } catch (e) {
+    console.warn('Server reset failed:', e.message);
+  }
+
+  // Return to onboarding
+  document.getElementById('main-app').classList.add('hidden');
+  document.getElementById('screen-onboarding').classList.add('active');
+  showToast('Profile reset. Let\'s start fresh! 🌱');
+}
 
 // ═══════════════════════════════════════════════
 //  BOOTSTRAP

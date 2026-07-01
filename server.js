@@ -270,6 +270,28 @@ app.get('/api/impact/contributions', (req, res) => {
 });
 app.get('/api/impact/materials', (req, res) => res.json({ list: [{ label: 'Cardboard', percent: 45 }, { label: 'PET Plastic', percent: 30 }, { label: 'Aluminum', percent: 25 }] }));
 
+app.get('/api/user/profile', (req, res) => {
+  try {
+    const row = db.prepare('SELECT profile_data FROM users WHERE id = 1').get();
+    if (row && row.profile_data) {
+      res.json(JSON.parse(row.profile_data));
+    } else {
+      res.json(null);
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/user/profile', (req, res) => {
+  try {
+    db.prepare('DELETE FROM users WHERE id = 1').run();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Backend server running on http://0.0.0.0:${PORT}`);

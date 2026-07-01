@@ -506,12 +506,15 @@
         <li><a href="#" class="nav-item" data-view="impact" id="nav-impact">
           <span class="nav-icon">🌍</span><span class="nav-label">My Impact</span>
         </a></li>
+        <li><a href="#" class="nav-item" data-view="profile" id="nav-profile">
+          <span class="nav-icon">⚙️</span><span class="nav-label">Profile</span>
+        </a></li>
       </ul>
-      <div class="nav-user">
-        <div class="user-avatar">AK</div>
+      <div class="nav-user" onclick="switchView('profile')" style="cursor:pointer;">
+        <div class="user-avatar" id="sidebar-avatar">AK</div>
         <div class="user-info">
-          <span class="user-name">Alex Kumar</span>
-          <span class="user-stat">47 items diverted</span>
+          <span class="user-name" id="sidebar-username">Alex Kumar</span>
+          <span class="user-stat" id="sidebar-stat">47 items diverted</span>
         </div>
       </div>
     </nav>
@@ -533,6 +536,10 @@
       <button class="bnav-item" data-view="impact">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 6v6l4 2"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M12 2v2"/></svg>
         <span>Impact</span>
+      </button>
+      <button class="bnav-item" data-view="profile">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profile</span>
       </button>
     </nav>
 
@@ -757,6 +764,175 @@
             <h3 class="panel-title">Activity Log</h3>
             <div class="ledger-list" id="ledger-list"></div>
           </div>
+
+        </div>
+      </div>
+
+      <!-- ── VIEW: PROFILE & SETTINGS ── -->
+      <div class="view" id="view-profile">
+        <div class="view-header">
+          <h2 class="view-title">My <span class="grad-text">Profile</span></h2>
+          <p class="view-sub">Your waste intelligence profile & app settings</p>
+        </div>
+        <div class="profile-scroll-area">
+
+          <!-- Hero Card -->
+          <div class="profile-hero glass-card">
+            <div class="profile-avatar-lg">
+              <div class="profile-avatar-inner" id="profile-avatar-letter">H</div>
+            </div>
+            <div class="profile-name" id="profile-display-name">TerraLoop User</div>
+            <div class="profile-userid" id="profile-user-id">user_xxx</div>
+            <div class="profile-member-since" id="profile-member-since">Member since July 2026</div>
+            <div class="profile-quick-stats">
+              <div class="pqs-item">
+                <span class="pqs-val" id="pqs-items">0</span>
+                <span class="pqs-label">Items</span>
+              </div>
+              <div class="pqs-item">
+                <span class="pqs-val" id="pqs-points">0</span>
+                <span class="pqs-label">Points</span>
+              </div>
+              <div class="pqs-item">
+                <span class="pqs-val" id="pqs-kg">0</span>
+                <span class="pqs-label">kg Diverted</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section: Living Space -->
+          <div class="profile-section glass-card">
+            <div class="profile-section-header">
+              <span class="profile-section-icon">🏠</span>
+              <span class="profile-section-title">Living Space</span>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Housing Type</p>
+            <div class="profile-chip-grid" id="pf-housing-chips" data-field="housing">
+              <button class="profile-chip" data-val="apartment"><span class="pc-icon">🏢</span><span class="pc-label">Apartment</span></button>
+              <button class="profile-chip" data-val="house"><span class="pc-icon">🏡</span><span class="pc-label">House</span></button>
+              <button class="profile-chip" data-val="condo"><span class="pc-icon">🏬</span><span class="pc-label">Condo</span></button>
+              <button class="profile-chip" data-val="studio"><span class="pc-icon">🛏️</span><span class="pc-label">Studio</span></button>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin: 16px 0 12px;">Green Space</p>
+            <div class="profile-chip-grid" id="pf-greenspace-chips" data-field="greenSpace">
+              <button class="profile-chip" data-val="none"><span class="pc-icon">❌</span><span class="pc-label">None</span></button>
+              <button class="profile-chip" data-val="balcony"><span class="pc-icon">🌿</span><span class="pc-label">Balcony</span></button>
+              <button class="profile-chip" data-val="garden"><span class="pc-icon">🌳</span><span class="pc-label">Garden</span></button>
+              <button class="profile-chip" data-val="rooftop"><span class="pc-icon">🏗️</span><span class="pc-label">Rooftop</span></button>
+            </div>
+          </div>
+
+          <!-- Section: Toolkit -->
+          <div class="profile-section glass-card">
+            <div class="profile-section-header">
+              <span class="profile-section-icon">🛠️</span>
+              <span class="profile-section-title">Your Toolkit</span>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Select all tools you have access to</p>
+            <div class="profile-chip-grid multi" id="pf-tools-chips" data-field="tools">
+              <button class="profile-chip" data-val="scissors"><span class="pc-icon">✂️</span><span class="pc-label">Scissors</span></button>
+              <button class="profile-chip" data-val="glue_gun"><span class="pc-icon">🔫</span><span class="pc-label">Glue Gun</span></button>
+              <button class="profile-chip" data-val="hammer"><span class="pc-icon">🔨</span><span class="pc-label">Hammer</span></button>
+              <button class="profile-chip" data-val="drill"><span class="pc-icon">🔩</span><span class="pc-label">Drill</span></button>
+              <button class="profile-chip" data-val="saw"><span class="pc-icon">🪚</span><span class="pc-label">Saw</span></button>
+              <button class="profile-chip" data-val="sewing"><span class="pc-icon">🧵</span><span class="pc-label">Sewing Kit</span></button>
+              <button class="profile-chip" data-val="paint"><span class="pc-icon">🖌️</span><span class="pc-label">Paint</span></button>
+              <button class="profile-chip" data-val="soldering"><span class="pc-icon">⚡</span><span class="pc-label">Soldering</span></button>
+            </div>
+          </div>
+
+          <!-- Section: Household & Location -->
+          <div class="profile-section glass-card">
+            <div class="profile-section-header">
+              <span class="profile-section-icon">👥</span>
+              <span class="profile-section-title">Household & Location</span>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Household Type</p>
+            <div class="profile-chip-grid" id="pf-demo-chips" data-field="demographic">
+              <button class="profile-chip" data-val="adult"><span class="pc-icon">👤</span><span class="pc-label">Solo</span></button>
+              <button class="profile-chip" data-val="couple"><span class="pc-icon">👫</span><span class="pc-label">Couple</span></button>
+              <button class="profile-chip" data-val="family"><span class="pc-icon">👨‍👩‍👧</span><span class="pc-label">Family</span></button>
+              <button class="profile-chip" data-val="elderly"><span class="pc-icon">🧓</span><span class="pc-label">Elderly</span></button>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin: 16px 0 12px;">📍 Pincode / Postcode</p>
+            <div class="profile-input-row">
+              <div class="input-wrap" style="flex:1;">
+                <span class="input-icon">📍</span>
+                <input type="text" id="pf-pincode-input" placeholder="e.g. 110001" maxlength="10" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Section: Waste Infrastructure -->
+          <div class="profile-section glass-card">
+            <div class="profile-section-header">
+              <span class="profile-section-icon">🗑️</span>
+              <span class="profile-section-title">Waste Infrastructure</span>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Number of Waste Bins</p>
+            <div class="profile-stepper">
+              <button id="pf-bins-dec">−</button>
+              <span class="stepper-val" id="pf-bins-val">2</span>
+              <button id="pf-bins-inc">+</button>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin: 16px 0 12px;">Composting Available?</p>
+            <div class="profile-compost-toggle">
+              <button class="pct-btn active" id="pf-compost-yes">✅ Yes</button>
+              <button class="pct-btn no" id="pf-compost-no">❌ No</button>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin: 16px 0 12px;">Municipal Pickup Days</p>
+            <div class="profile-chip-grid multi" id="pf-pickup-chips" data-field="pickupDays">
+              <button class="profile-chip" data-val="none"><span class="pc-icon">🚫</span><span class="pc-label">None</span></button>
+              <button class="profile-chip" data-val="mon"><span class="pc-label">Mon</span></button>
+              <button class="profile-chip" data-val="tue"><span class="pc-label">Tue</span></button>
+              <button class="profile-chip" data-val="wed"><span class="pc-label">Wed</span></button>
+              <button class="profile-chip" data-val="thu"><span class="pc-label">Thu</span></button>
+              <button class="profile-chip" data-val="fri"><span class="pc-label">Fri</span></button>
+              <button class="profile-chip" data-val="sat"><span class="pc-label">Sat</span></button>
+              <button class="profile-chip" data-val="sun"><span class="pc-label">Sun</span></button>
+            </div>
+          </div>
+
+          <!-- Section: App Preferences -->
+          <div class="profile-section glass-card">
+            <div class="profile-section-header">
+              <span class="profile-section-icon">⚙️</span>
+              <span class="profile-section-title">Preferences</span>
+            </div>
+            <div class="profile-toggle-row">
+              <div class="profile-toggle-label">
+                <span>Push Notifications</span>
+                <span>Get alerts for pickup days & nearby facilities</span>
+              </div>
+              <div class="toggle-switch active" id="pf-toggle-notif"></div>
+            </div>
+            <div class="profile-toggle-row">
+              <div class="profile-toggle-label">
+                <span>Dark Mode</span>
+                <span>Always on for best experience</span>
+              </div>
+              <div class="toggle-switch active" style="opacity:0.5; pointer-events:none;"></div>
+            </div>
+            <div class="profile-toggle-row">
+              <div class="profile-toggle-label">
+                <span>Creative Mode</span>
+                <span>Prioritize unusual & creative upcycle ideas</span>
+              </div>
+              <div class="toggle-switch active" id="pf-toggle-creative"></div>
+            </div>
+          </div>
+
+          <!-- Danger Zone -->
+          <div class="profile-section glass-card" style="border-color: rgba(244,63,94,0.15);">
+            <div class="profile-section-header">
+              <span class="profile-section-icon">⚠️</span>
+              <span class="profile-section-title" style="color: #f43f5e;">Danger Zone</span>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Reset your profile to start fresh. This will clear all your onboarding answers and return you to the setup wizard.</p>
+            <button class="btn-danger-outline" id="btn-reset-profile">🗑️ Reset Profile & Start Over</button>
+          </div>
+
+          <div class="profile-version">TerraLoop v1.0.0 · AI Waste Intelligence</div>
 
         </div>
       </div>
