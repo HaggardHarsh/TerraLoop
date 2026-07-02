@@ -1261,13 +1261,96 @@ function initProfileView() {
 
   // Hero card
   const uid = USER_ID || 'user_xxx';
-  const initial = uid.charAt(0).toUpperCase();
+  const displayName = profile.displayName || 'TerraLoop User';
+  const initial = displayName.charAt(0).toUpperCase();
+  
   const avatarEl = document.getElementById('profile-avatar-letter');
   if (avatarEl) avatarEl.textContent = initial;
+  
   const nameEl = document.getElementById('profile-display-name');
-  if (nameEl) nameEl.textContent = 'TerraLoop User';
+  if (nameEl) nameEl.textContent = displayName;
+  
   const uidEl = document.getElementById('profile-user-id');
   if (uidEl) uidEl.textContent = uid.length > 24 ? uid.slice(0, 24) + '…' : uid;
+
+  const avatarImgEl = document.getElementById('profile-avatar-img');
+  if (profile.avatar) {
+    if (avatarEl) avatarEl.style.display = 'none';
+    if (avatarImgEl) {
+      avatarImgEl.src = profile.avatar;
+      avatarImgEl.style.display = 'block';
+    }
+  } else {
+    if (avatarEl) avatarEl.style.display = 'flex';
+    if (avatarImgEl) avatarImgEl.style.display = 'none';
+  }
+
+  // Edit user modal logic
+  if (!window._editUserListenerBound) {
+    window._editUserListenerBound = true;
+    
+    let tempAvatar = null;
+    
+    document.getElementById('btn-edit-user')?.addEventListener('click', () => {
+      tempAvatar = AppState.userProfile?.avatar || null;
+      document.getElementById('edit-name-input').value = AppState.userProfile?.displayName || 'TerraLoop User';
+      
+      const modalLetter = document.getElementById('edit-avatar-letter');
+      const modalImg = document.getElementById('edit-avatar-img');
+      if (tempAvatar) {
+        modalLetter.style.display = 'none';
+        modalImg.src = tempAvatar;
+        modalImg.style.display = 'block';
+      } else {
+        modalLetter.textContent = (AppState.userProfile?.displayName || 'TerraLoop User').charAt(0).toUpperCase();
+        modalLetter.style.display = 'flex';
+        modalImg.style.display = 'none';
+      }
+      
+      document.getElementById('modal-edit-user')?.classList.remove('hidden');
+      setTimeout(() => document.getElementById('modal-edit-user')?.classList.add('show'), 10);
+    });
+
+    const closeUserModal = () => {
+      document.getElementById('modal-edit-user')?.classList.remove('show');
+      setTimeout(() => document.getElementById('modal-edit-user')?.classList.add('hidden'), 300);
+    };
+
+    document.getElementById('btn-close-edit-user')?.addEventListener('click', closeUserModal);
+
+    // Avatar upload trigger
+    document.getElementById('edit-avatar-trigger')?.addEventListener('click', () => {
+      document.getElementById('edit-avatar-input')?.click();
+    });
+
+    document.getElementById('edit-avatar-input')?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        tempAvatar = ev.target.result;
+        document.getElementById('edit-avatar-letter').style.display = 'none';
+        const img = document.getElementById('edit-avatar-img');
+        img.src = tempAvatar;
+        img.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('btn-save-edit-user')?.addEventListener('click', () => {
+      const newName = document.getElementById('edit-name-input').value.trim();
+      if (newName) {
+        AppState.userProfile = AppState.userProfile || {};
+        AppState.userProfile.displayName = newName;
+      }
+      if (tempAvatar) {
+        AppState.userProfile.avatar = tempAvatar;
+      }
+      saveProfileFromUI();
+      initProfileView();
+      closeUserModal();
+    });
+  }
 
   // Quick stats from impact API
   API.get('/impact/summary').then(data => {
@@ -1377,26 +1460,31 @@ function initProfileView() {
   });
 
   // Reset profile
-  document.getElementById('btn-reset-profile')?.addEventListener('click', () => {
-    if (!confirm('Are you sure? This will erase your profile and restart onboarding.')) return;
-    resetProfile();
-  });
+  if (!window._profileListenersBound) {
+    window._profileListenersBound = true;
+    
+    document.getElementById('btn-reset-profile')?.addEventListener('click', () => {
+      if (!confirm('Are you sure? This will erase your profile and restart onboarding.')) return;
+      resetProfile();
+    });
 
-  // Edit Profile Modal Listeners
-  document.getElementById('btn-edit-profile')?.addEventListener('click', () => {
-    document.getElementById('modal-edit-profile')?.classList.add('active');
-  });
-  
-  const closeModal = () => {
-    document.getElementById('modal-edit-profile')?.classList.remove('active');
-    updateProfileSummary();
-  };
-  
-  document.getElementById('btn-close-edit')?.addEventListener('click', closeModal);
-  document.getElementById('btn-save-edit')?.addEventListener('click', () => {
-    saveProfileFromUI();
-    closeModal();
-  });
+    // Edit Profile Modal Listeners
+    document.getElementById('btn-edit-profile')?.addEventListener('click', () => {
+      console.log('[TerraLoop] Edit Details clicked');
+      document.getElementById('modal-edit-profile')?.classList.add('active');
+    });
+    
+    const closeModal = () => {
+      document.getElementById('modal-edit-profile')?.classList.remove('active');
+      updateProfileSummary();
+    };
+    
+    document.getElementById('btn-close-edit')?.addEventListener('click', closeModal);
+    document.getElementById('btn-save-edit')?.addEventListener('click', () => {
+      saveProfileFromUI();
+      closeModal();
+    });
+  }
 
   updateProfileSummary();
 }
@@ -1426,6 +1514,8 @@ function collectProfileFromUI() {
 
   return {
     userId: USER_ID,
+    displayName: AppState.userProfile?.displayName || 'TerraLoop User',
+    avatar: AppState.userProfile?.avatar || null,
     housing,
     greenSpace,
     bins,
