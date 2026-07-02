@@ -829,6 +829,12 @@ body {
   transition: width 0.5s ease;
 }
 
+/* Recycle cards (vertical list, not carousel) */
+.rec-recycle-cards .idea-card {
+  min-width: unset; max-width: unset; width: 100%;
+  scroll-snap-align: unset; flex-shrink: unset;
+}
+
 /* Carousel Dots */
 .rec-dots {
   display: flex; justify-content: center; gap: 6px; padding: 8px 0;

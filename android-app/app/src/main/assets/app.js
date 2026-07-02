@@ -665,7 +665,7 @@ function showRecommendations(item) {
   container.classList.remove('hidden');
 
   if (badge) {
-    const count = item.recommendations?.filter(r => r.type !== 'recycle').length || 0;
+    const count = item.recommendations?.filter(r => (r.type || '').toLowerCase() !== 'recycle').length || 0;
     badge.textContent = `✏️ ${count} reuse option${count === 1 ? '' : 's'}`;
   }
 
@@ -679,6 +679,16 @@ function showRecommendations(item) {
   }
 
   fallback.classList.add('hidden');
+
+  // Safeguard: if the AI returned no "recycle" type, force the last recommendation to be recycle
+  const hasRecycle = item.recommendations.some(r => (r.type || '').toLowerCase() === 'recycle');
+  if (!hasRecycle && item.recommendations.length > 1) {
+    const last = item.recommendations[item.recommendations.length - 1];
+    last.type = 'recycle';
+    last.typeLabel = 'Recycle';
+    console.log('[TerraLoop] No recycle found, forced last rec to recycle:', last.title);
+  }
+
   const userTools = AppState.userProfile?.tools || [];
 
   // Type icon mapping
@@ -699,8 +709,10 @@ function showRecommendations(item) {
             <div class="ic-title">${rec.title}</div>
             <div class="ic-desc">${rec.desc}</div>
           </div>
-          <div class="ic-image">
-            <span class="ic-image-placeholder">${typeEmoji[badgeType] || '♻️'}</span>
+          <div class="ic-image" id="ic-img-${i}">
+            ${rec.imageSearch
+              ? `<img src="https://source.unsplash.com/200x200/?${encodeURIComponent(rec.imageSearch)}" alt="${rec.title}" onerror="this.outerHTML='<span class=\\'ic-image-placeholder\\'>${typeEmoji[badgeType] || '♻️'}</span>'">`
+              : `<span class="ic-image-placeholder">${typeEmoji[badgeType] || '♻️'}</span>`}
           </div>
         </div>
         <div class="ic-chips">
@@ -715,14 +727,32 @@ function showRecommendations(item) {
       </div>`;
   };
 
-  const allRecs = item.recommendations;
-  cards.innerHTML = allRecs.map((rec, i) => renderIdeaCard(rec, i)).join('');
+  const upcycles = item.recommendations.filter(r => (r.type || '').toLowerCase() !== 'recycle');
+  const recycles = item.recommendations.filter(r => (r.type || '').toLowerCase() === 'recycle');
+
+  // Render carousel cards
+  cards.innerHTML = upcycles.map((rec, i) => renderIdeaCard(rec, i)).join('');
+
+  // Render recycle cards (vertically)
+  const recycleContainer = document.getElementById('rec-recycle-cards');
+  console.log('[TerraLoop] Rec types:', item.recommendations.map(r => r.type), '| Recycles found:', recycles.length);
+  if (recycleContainer) {
+    if (recycles.length > 0) {
+      recycleContainer.innerHTML = recycles.map((rec, i) => renderIdeaCard(rec, upcycles.length + i)).join('');
+      recycleContainer.style.display = 'flex';
+      recycleContainer.style.paddingBottom = '20px';
+    } else {
+      recycleContainer.innerHTML = '';
+      recycleContainer.style.display = 'none';
+    }
+  }
 
   // Build dots
   if (dotsEl) {
-    dotsEl.innerHTML = allRecs.map((_, i) => 
+    dotsEl.innerHTML = upcycles.map((_, i) => 
       `<span class="rec-dot ${i === 0 ? 'active' : ''}" onclick="scrollToRecCard(${i})"></span>`
     ).join('');
+    dotsEl.style.display = upcycles.length > 1 ? 'flex' : 'none';
   }
 }
 

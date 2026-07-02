@@ -84,6 +84,7 @@ Return ONLY a valid JSON object in this exact format, with no markdown formattin
       "tools": ["scissors"], // Tools required
       "effort": 60, // Estimated effort 0-100
       "time": "15 mins", // Estimated time
+      "imageSearch": "metal wind chime hanging", // CRITICAL: A short 2-5 word search query describing what the FINISHED product looks like. This will be used to find a photo. Be specific and visual. For recycle ideas, describe the disposal action (e.g. "scrap metal recycling center").
       "steps": [
         "Step 1: Detailed instruction...",
         "Step 2: Detailed instruction..."

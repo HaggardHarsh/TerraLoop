@@ -1,169 +1,86 @@
-# TerraLoop
+# ♻️ TerraLoop
 
-**AI-Driven Sustainable Waste Logistics & Upcycling Platform**
+**TerraLoop** is an intelligent, AI-powered mobile application designed to help users creatively upcycle, recycle, and sustainably dispose of household items. By scanning an item or simply describing it, TerraLoop provides personalized, actionable recommendations based on your available tools, local waste infrastructure, and living space.
 
-TerraLoop is a context-aware waste intelligence app that tells you exactly what to do with something before you throw it away. Point your camera at an item, and TerraLoop identifies the material, checks what tools you own, checks whether a certified disposal facility exists near you, and returns the three most actionable things you can do — ranked by effort and personalized to your living situation.
+<div align="center">
+  <i>Turn trash into treasure and build a better tomorrow.</i>
+</div>
 
-It is not a generic recycling guide. Every output is filtered through a user profile built at onboarding: your housing type, available green space, toolkit, composting setup, and location. A studio apartment dweller without a drill will never be shown a woodworking project. A user with a balcony will be shown planter ideas. A user with composting enabled will always see composting as the fastest route for organic waste.
+## ✨ Features
 
-When an item has no reuse path — e-waste, hazardous material, shattered glass — the system shifts from recommendation engine to logistics router. It silently checks whether a certified facility exists near the user's pincode and surfaces the result as plain text: name, distance, hours, accepted materials. No map. No friction. If nothing is found, the item is logged to a "Digital Garage" and the user is notified the moment a facility becomes available.
+- **📸 AI Scanner:** Snap a picture or describe an item (e.g., "Empty 2L plastic bottle"). The app uses AI to instantly classify the material, grade its recyclability, and generate creative ideas.
+- **🎨 Smart Recommendations:** Get tailored "Upcycle," "Recycle," "Donate," or "Compost" options. The app cross-references your personal toolkit (e.g., scissors, glue gun) and warns you if you're missing required tools.
+- **🗄️ Garage:** Save your favorite upcycling ideas to your virtual garage for your next weekend project.
+- **🌱 Impact Tracking:** Keep track of the items you've scanned and diverted from landfills. Watch your eco-impact grow over time.
+- **🌍 Community:** Discover what other eco-warriors in your area are upcycling and share your own creations.
+- **✨ Premium UI:** A stunning, modern glassmorphic interface with fluid animations and responsive carousels for an engaging user experience.
 
----
+## 🛠️ Tech Stack
 
-## Features
+- **Frontend:** HTML5, Vanilla JavaScript, CSS (Glassmorphism design system)
+- **Mobile Wrapper:** Android WebView (built via Android CLI)
+- **Backend:** Node.js, Express
+- **Database:** SQLite (local profile & garage storage)
+- **AI Integration:** Integration points for Computer Vision and LLM-based recommendation scoring.
 
-### Onboarding — User Context Profile
-A 4-step wizard that builds a deterministic profile used to filter every downstream output.
+## 🚀 Getting Started
 
-- **Step 1 — Home**: Housing type (apartment, house, condo, studio) and available green space (none, balcony, garden, rooftop)
-- **Step 2 — Waste Infrastructure**: Number of bins, composting availability, municipal pickup days (including a "No pickup service" option)
-- **Step 3 — Toolkit**: Multi-select tool inventory (scissors, glue gun, hammer, drill, saw, sewing kit, paint, soldering iron) and household type
-- **Step 4 — Location**: Pincode for facility lookup — placed last, after trust is established, with an explicit privacy note
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v16+)
+- [Android SDK & CLI](https://developer.android.com/studio/command-line) (for building the mobile app)
 
-### Scan Engine — AI Inference Pipeline
-The primary interface. A large tap-to-scan zone opens the camera/gallery. An `OR` divider separates it from a secondary text description field for when a photo isn't possible.
+### 1. Start the Backend Server
 
-The pipeline runs in three animated stages:
-1. **CV Microservice** (edge model): object detection and material classification
-2. **Context Engine**: queries the user's profile — tools, space, composting, location
-3. **Recommender**: scores and ranks reuse options against the user's actual constraints
-
-Results are three categorised options:
-- ⚡ **Quick Win** — lowest effort, immediate action
-- 🎨 **Creative Project** — upcycling with some craft
-- 🔧 **Functional Utility** — practical repurposing
-
-Each card shows estimated time, required tools, and whether the user's toolkit is a match.
-
-### Geo-Spatial Fallback — Facility Lookup
-Triggered when an item has no reuse path (e-waste, hazardous waste). Runs silently against a local facility database keyed by the user's pincode. Returns a plain-text result card — no map UI — showing facility name, type, distance, and opening hours. If no facility exists within range, the item is logged to the Digital Garage with safe storage instructions.
-
-### Digital Garage — Async Storage State
-A holding area for items that can't yet be disposed of. Each entry carries safe containment instructions, current status, and material tags. A live notification panel surfaces event-driven alerts when the facility landscape near the user changes.
-
-### Community — Explore Feed
-An Instagram-style explore grid mixing static posts and Reels. Features a Stories row, mixed tall/wide grid layout, hover overlays with stats, toolkit-aware labels (computed against the user's profile), and a live search bar that filters by title or material.
-
-### Impact Ledger
-A personal log of real environmental impact. No points, no gamification.
-
-- Animated CO₂ prevented counter
-- Items diverted from landfill
-- Projects completed and active streak
-- Per-project contribution cards showing CO₂ saved and materials diverted
-- Material breakdown bars
-- Chronological activity log
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Structure | HTML5 (semantic) |
-| Styling | Vanilla CSS (custom design system, glassmorphism, CSS animations) |
-| Logic | Vanilla JavaScript (ES2020, no frameworks, no build step) |
-| Fonts | Inter + JetBrains Mono via Google Fonts |
-
-No npm. No bundler. No runtime dependencies. Open `index.html` in any modern browser.
-
----
-
-## File Structure
-
-```
-terraloop/
-├── index.html   # App shell — all view templates and onboarding steps
-├── style.css    # Full design system — tokens, components, animations
-├── app.js       # All application logic — state, pipeline, rendering
-└── README.md    # This file
-```
-
----
-
-## Running It
-
-No install required.
+The backend serves the API endpoints and manages the SQLite database.
 
 ```bash
-# Windows
-start index.html
+# Clone the repository
+git clone https://github.com/HaggardHarsh/TerraLoop.git
+cd TerraLoop
 
-# macOS
-open index.html
+# Install dependencies (if a package.json exists) or run directly
+# Ensure you have express, multer, sqlite3, etc. installed
+npm install
 
-# Linux
-xdg-open index.html
+# Start the local server (runs on port 3000 by default)
+node server.js
 ```
 
-Or drag `index.html` into any browser window.
+### 2. Run the Android App
 
----
+The mobile application is an Android project wrapping the frontend assets.
 
-## Onboarding Flow
+```bash
+# Navigate to the Android project folder
+cd android-app
 
-```
-Step 1: Home
-  └── Housing type + Green space
+# Build the debug APK using Gradle wrapper
+./gradlew assembleDebug
 
-Step 2: Waste Infrastructure
-  └── Bin count + Composting toggle + Pickup days (or "No service")
-
-Step 3: Toolkit
-  └── Available tools (multi-select) + Household type
-
-Step 4: Location
-  └── Pincode for facility lookup
-       (placed last — trust is established by this point)
-
-→ Profile summary → Launch app
+# Install on a connected emulator or physical device
+adb install app/build/outputs/apk/debug/app-debug.apk
 ```
 
----
+> **Note:** The Android app expects the backend server to be running locally or at a configured API URL. Ensure your device/emulator can reach the host machine's IP (e.g., `10.0.2.2` for Android emulators).
 
-## Scan Flow
+## 📂 Project Structure
 
-```
-User taps camera zone → uploads photo
-         OR
-User types item description → hits Go
-         ↓
-[CV Microservice]     — material classification
-[Context Engine]      — profile lookup (tools, space, composting, pincode)
-[Recommender]         — scores options against constraints
-         ↓
-IF reuse options exist:
-  → 3 ranked cards (Quick Win / Creative / Functional)
-     each tagged: time, tools needed, toolkit compatibility
-
-IF no reuse path (e-waste / hazardous):
-  → Silent facility lookup by pincode
-  → Text result: facility name + distance + hours
-     OR safe storage note + item logged to Digital Garage
+```text
+TerraLoop/
+├── android-app/            # Android Native Project Wrapper
+│   └── app/src/main/assets/# Frontend Source Code
+│       ├── index.html      # Main App Structure & UI Views
+│       ├── style.css       # Glassmorphism Design System
+│       └── app.js          # Core App Logic & API Integration
+├── server.js               # Node.js Express Backend
+├── terraloop.db            # SQLite Database
+└── README.md
 ```
 
----
+## 🤝 Contributing
 
-## Production Roadmap
+Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/HaggardHarsh/TerraLoop/issues) if you want to contribute.
 
-| Component | Implementation |
-|---|---|
-| CV model | TFLite (edge) + Cloud Vision API fallback |
-| User profiles | Firebase Firestore or Supabase |
-| Auth | Firebase Auth (anonymous → linked) |
-| Facility database | Curated dataset + municipal API integrations |
-| Geo lookup | Server-side pincode → facility query (no client-side map) |
-| Community UGC | Firebase Storage or S3 for images/reels |
-| Push notifications | Firebase Cloud Messaging for Garage alerts |
-| Recommendation engine | Collaborative filtering trained on scan + completion data |
-| Feed algorithm | Profile-weighted ranking by tool match + local proximity |
+## 📄 License
 
----
-
-## Design Principles
-
-- **No friction at point of disposal** — the scan result must be immediately actionable
-- **Hyper-local by default** — every output filtered to the user's actual context
-- **No cognitive overload** — maximum 3 options per scan, each in a distinct category
-- **Privacy-first location** — pincode collected last, used only server-side, never surfaced in UI
-- **No gamification** — impact shown as real environmental metrics, not abstract points
+This project is licensed under the MIT License - see the LICENSE file for details.
