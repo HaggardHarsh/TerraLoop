@@ -77,9 +77,6 @@ TerraLoop/
 └── README.md
 ```
 
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/HaggardHarsh/TerraLoop/issues) if you want to contribute.
 
 ## 📄 License
 
